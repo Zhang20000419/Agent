@@ -94,6 +94,42 @@ def _normalize_payload(payload: dict) -> dict:
     return payload
 
 
+def _normalize_duration_from_text(duration_text: str, duration_value: str) -> str:
+    text = duration_text.strip().lower()
+    if not text:
+        return duration_value
+
+    if re.search(r"(一天|1天|两天|2天|几天|数天)", text):
+        return "less_than_2_weeks"
+    if re.search(r"(一周|1周|两周|2周|十天|10天|十二天|12天)", text):
+        return "less_than_2_weeks"
+    if re.search(r"(三周|3周|四周|4周|一个月内|近一个月)", text):
+        return "2_to_4_weeks"
+    if re.search(r"(一个月|1个月|两个月|2个月|三个月内|3个月内)", text):
+        return "1_to_3_months"
+    if re.search(r"(三个月以上|3个月以上|半年|几个月|数月|长期)", text):
+        return "more_than_3_months"
+    return duration_value
+
+
+def _normalize_frequency_from_text(frequency_text: str, frequency_value: str) -> str:
+    text = frequency_text.strip().lower()
+    if not text:
+        return frequency_value
+
+    if re.search(r"(没有|无|从不)", text):
+        return "none"
+    if re.search(r"(偶尔|很少|少数时候)", text):
+        return "rare"
+    if re.search(r"(有时|有时候|有一些时候)", text):
+        return "sometimes"
+    if re.search(r"(经常|常常|多数时候)", text):
+        return "often"
+    if re.search(r"(每天|每日|几乎每天|天天)", text):
+        return "almost_every_day"
+    return frequency_value
+
+
 def _invoke_structured(prompt: str, parser):
     response = get_base_model().invoke(prompt)
     text = _extract_content(response)
@@ -109,6 +145,15 @@ def _normalize_turn_analysis(turn: TurnAnalysis) -> TurnAnalysis:
     turn.evidence = [item.strip() for item in turn.evidence if item and item.strip()]
     turn.explanation = turn.explanation.strip()
     turn.review_notes = turn.review_notes.strip()
+    original_duration = turn.duration
+    original_frequency = turn.frequency
+    turn.duration = _normalize_duration_from_text(turn.duration_text, turn.duration)
+    turn.frequency = _normalize_frequency_from_text(turn.frequency_text, turn.frequency)
+
+    if turn.duration != original_duration:
+        turn.review_notes = f"已根据回答中的持续时间文本“{turn.duration_text}”将 duration 归一化为 {turn.duration}。{turn.review_notes}".strip()
+    if turn.frequency != original_frequency:
+        turn.review_notes = f"已根据回答中的频率文本“{turn.frequency_text}”将 frequency 归一化为 {turn.frequency}。{turn.review_notes}".strip()
 
     if not turn.evidence:
         turn.polarity = "uncertain"
