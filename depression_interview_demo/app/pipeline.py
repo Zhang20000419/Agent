@@ -63,6 +63,37 @@ def _language_instruction(language: str) -> str:
     return "输出语言要求：中文。所有可读文本字段必须使用中文。"
 
 
+def _normalize_payload(payload: dict) -> dict:
+    duration_map = {
+        "more_than_2_weeks": "2_to_4_weeks",
+        "two_to_four_weeks": "2_to_4_weeks",
+        "2-4_weeks": "2_to_4_weeks",
+        "2_4_weeks": "2_to_4_weeks",
+        "less_than_two_weeks": "less_than_2_weeks",
+        "one_to_three_months": "1_to_3_months",
+        "more_than_three_months": "more_than_3_months",
+        "unknown": "unclear",
+    }
+    frequency_map = {
+        "every_day": "almost_every_day",
+        "daily": "almost_every_day",
+        "frequent": "often",
+        "unknown": "unclear",
+    }
+    polarity_map = {
+        "positive": "support",
+        "negative": "deny",
+    }
+
+    if "duration" in payload and isinstance(payload["duration"], str):
+        payload["duration"] = duration_map.get(payload["duration"], payload["duration"])
+    if "frequency" in payload and isinstance(payload["frequency"], str):
+        payload["frequency"] = frequency_map.get(payload["frequency"], payload["frequency"])
+    if "polarity" in payload and isinstance(payload["polarity"], str):
+        payload["polarity"] = polarity_map.get(payload["polarity"], payload["polarity"])
+    return payload
+
+
 def _invoke_structured(prompt: str, parser):
     response = get_base_model().invoke(prompt)
     text = _extract_content(response)
@@ -70,7 +101,7 @@ def _invoke_structured(prompt: str, parser):
         return parser.parse(text)
     except Exception:
         cleaned = _clean_json_text(text)
-        payload = json.loads(cleaned)
+        payload = _normalize_payload(json.loads(cleaned))
         return parser.pydantic_object.model_validate(payload)
 
 
