@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>抑郁访谈工作台</title>
+  <style>
+    :root {
+      --bg: #ecf1f7;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-strong: #ffffff;
+      --line: rgba(20, 34, 57, 0.12);
+      --text: #132238;
+      --muted: #62758a;
+      --accent: #1d63d6;
+      --accent-soft: rgba(29, 99, 214, 0.12);
+      --good: #11875f;
+      --warn: #bb7a16;
+      --risk: #c24c4c;
+      --ink: #142239;
+      --shadow: 0 18px 48px rgba(19, 34, 56, 0.1);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(29, 99, 214, 0.08), transparent 24%),
+        radial-gradient(circle at right 18%, rgba(17, 135, 95, 0.08), transparent 24%),
+        linear-gradient(180deg, #f6f8fb 0%, #ebf0f6 100%);
+    }
+
+    .page {
+      width: min(1480px, calc(100% - 26px));
+      margin: 0 auto;
+      padding: 22px 0 38px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-main,
+    .hero-side,
+    .panel {
+      padding: 22px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      margin: 16px 0 10px;
+      font-size: clamp(32px, 5vw, 58px);
+      line-height: 0.96;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-main p {
+      margin: 0;
+      max-width: 50ch;
+      color: var(--muted);
+      line-height: 1.78;
+      font-size: 15px;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: 12px;
+      align-content: center;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .meta-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .meta-row strong {
+      color: var(--ink);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 420px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--warn);
+      box-shadow: 0 0 0 6px rgba(187, 122, 22, 0.12);
+    }
+
+    .status-dot.live {
+      background: var(--good);
+      box-shadow: 0 0 0 6px rgba(17, 135, 95, 0.12);
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .stat-box {
+      padding: 14px;
+      border-radius: 16px;
+      background: #f6f9fc;
+      border: 1px solid rgba(20, 34, 57, 0.08);
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      margin-top: 6px;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .progress-wrap {
+      margin-top: 14px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #dfe7f0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #1d63d6, #65a0ff);
+      transition: width 0.25s ease;
+    }
+
+    .question-list {
+      display: grid;
+      gap: 8px;
+      max-height: 72vh;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .question-item {
+      border: 1px solid rgba(20, 34, 57, 0.08);
+      border-radius: 16px;
+      background: #f9fbfd;
+      padding: 12px 14px;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+
+    .question-item.current {
+      border-color: rgba(29, 99, 214, 0.4);
+      background: rgba(29, 99, 214, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .question-item.done {
+      border-color: rgba(17, 135, 95, 0.24);
+      background: rgba(17, 135, 95, 0.06);
+    }
+
+    .question-item-index {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .question-item-text {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .question-box {
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #f8fbff, #f2f7fd);
+      border: 1px solid rgba(29, 99, 214, 0.12);
+    }
+
+    .question-index {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .question-text {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      margin-top: 14px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      resize: vertical;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      line-height: 1.7;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: rgba(29, 99, 214, 0.38);
+      box-shadow: 0 0 0 4px rgba(29, 99, 214, 0.08);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .actions.secondary-row {
+      grid-template-columns: 1fr 1fr;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .primary {
+      color: white;
+      background: linear-gradient(135deg, #1a57bf, #1d63d6);
+    }
+
+    .ghost {
+      color: var(--ink);
+      background: #edf3fa;
+    }
+
+    .accent {
+      color: white;
+      background: linear-gradient(135deg, #0d835a, #1da26c);
+    }
+
+    .hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .pause-banner {
+      margin-top: 12px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(29, 99, 214, 0.08);
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .feed {
+      display: grid;
+      gap: 14px;
+      max-height: 80vh;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .result-card {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel-strong);
+      padding: 18px;
+    }
+
+    .result-card.summary-card {
+      border-color: rgba(29, 99, 214, 0.18);
+      background: linear-gradient(180deg, #ffffff, #f7fbff);
+    }
+
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 10px;
+      align-items: start;
+    }
+
+    .result-top h3 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    .result-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #eef4fb;
+      color: var(--ink);
+    }
+
+    .pill.risk { background: rgba(194, 76, 76, 0.12); color: var(--risk); }
+    .pill.safe { background: rgba(17, 135, 95, 0.12); color: var(--good); }
+    .pill.warn { background: rgba(187, 122, 22, 0.12); color: var(--warn); }
+
+    .result-block { margin-top: 12px; }
+
+    .evidence-list,
+    .summary-list {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+
+    .summary-hero {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .summary-score {
+      padding: 18px;
+      border-radius: 18px;
+      background: #f0f6ff;
+      text-align: center;
+    }
+
+    .summary-score strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 1280px) {
+      .layout {
+        grid-template-columns: 280px 1fr;
+      }
+
+      .layout > .stack:nth-child(2) {
+        grid-column: span 1;
+      }
+
+      .layout > .stack:nth-child(3) {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .feed,
+      .question-list {
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <article class="card hero-main">
+        <span class="eyebrow">高敏感医疗原型</span>
+        <h1>抑郁访谈工作台</h1>
+        <p>页面提供手动访谈和自动演示两种模式。每次回答都会立即显示结构化识别结果；每两题之间自动停顿约 1.2 秒，便于观察中间结果和风险变化。16 轮结束后，系统会自动输出抑郁分类、症状总结和可解释信息。</p>
+      </article>
+      <aside class="card hero-side">
+        <div class="meta-row"><span>服务地址</span><strong>http://127.0.0.1:8090</strong></div>
+        <div class="meta-row"><span>访谈形式</span><strong>16 轮固定问题</strong></div>
+        <div class="meta-row"><span>输出内容</span><strong>逐题结构化结果 + 整场总结</strong></div>
+        <div class="meta-row"><span>运行模式</span><strong>手动访谈 / 自动演示</strong></div>
+      </aside>
+    </section>
+
+    <section class="layout">
+      <div class="stack">
+        <div class="card panel">
+          <h2>访谈目录</h2>
+          <div id="question-list" class="question-list"></div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card panel">
+          <div class="status">
+            <span id="status-dot" class="status-dot"></span>
+            <span id="status-text">正在检查后端...</span>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-box">
+              <div class="stat-label">已完成题数</div>
+              <div id="stat-completed" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">风险标记数</div>
+              <div id="stat-risk" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">支持轮次数</div>
+              <div id="stat-positive" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">当前模式</div>
+              <div id="stat-mode" class="stat-value" style="font-size:18px;">手动</div>
+            </div>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="progress-header">
+              <span id="progress-text">第 0 / 16 题</span>
+              <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="question-box">
+            <div id="question-index" class="question-index">加载中</div>
+            <p id="question-text" class="question-text">正在加载问题...</p>
+          </div>
+
+          <textarea id="answer-input" placeholder="请输入受试者回答，或者使用自动演示模式。"></textarea>
+
+          <div class="actions">
+            <button id="submit-btn" class="primary" type="button">提交并分析</button>
+            <button id="clear-btn" class="ghost" type="button">清空输入</button>
+          </div>
+          <div class="actions secondary-row">
+            <button id="demo-btn" class="accent" type="button">自动演示 16 题</button>
+            <button id="reset-btn" class="ghost" type="button">重置本轮访谈</button>
+          </div>
+
+          <div id="pause-banner" class="pause-banner" hidden>正在短暂停顿，即将进入下一题...</div>
+          <div class="hint">手动模式下使用当前输入作答；自动演示模式会使用预置的 16 条样例回答依次提交。按 <code>Ctrl/Cmd + Enter</code> 可以提交当前回答。</div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card panel">
+          <h2>分析时间线</h2>
+          <div id="feed" class="feed">
+            <div class="result-card">
+              <div class="result-label">已就绪</div>
+              <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的抑郁分类总结。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const DEMO_ANSWERS = [
+      "最近三周几乎每天都觉得很压抑，早上醒来就提不起精神。",
+      "以前喜欢的事情最近都不太想做了，连打游戏也没兴趣。",
+      "这段时间经常失眠，半夜会醒两三次。",
+      "胃口差了一些，最近吃得少，也瘦了一点。",
+      "常常觉得很累，稍微做点事就没有力气。",
+      "有时候会觉得自己很差劲，好像什么都做不好。",
+      "注意力明显变差，看东西老是走神，做决定很慢。",
+      "整个人动作慢了很多，也有时候会烦躁坐不住。",
+      "偶尔会想活着挺没意思，但目前没有真正想伤害自己。",
+      "已经影响到工作了，效率下降，也不太想见朋友。",
+      "大概是三周前开始越来越明显的。",
+      "这些状态不是偶尔，而是经常出现，差不多每天都有。",
+      "每次情绪上来会持续好几个小时，有时半天都缓不过来。",
+      "如果分级的话，我觉得更接近中等偏重。",
+      "家里人陪我说话的时候会稍微好一点。",
+      "我愿意继续寻求帮助，也可以考虑找专业人员聊聊。"
+    ];
+
+    const statusDot = document.getElementById("status-dot");
+    const statusText = document.getElementById("status-text");
+    const progressText = document.getElementById("progress-text");
+    const progressPercent = document.getElementById("progress-percent");
+    const progressFill = document.getElementById("progress-fill");
+    const questionIndexNode = document.getElementById("question-index");
+    const questionTextNode = document.getElementById("question-text");
+    const answerInput = document.getElementById("answer-input");
+    const submitBtn = document.getElementById("submit-btn");
+    const clearBtn = document.getElementById("clear-btn");
+    const demoBtn = document.getElementById("demo-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const pauseBanner = document.getElementById("pause-banner");
+    const feed = document.getElementById("feed");
+    const questionListNode = document.getElementById("question-list");
+    const statCompleted = document.getElementById("stat-completed");
+    const statRisk = document.getElementById("stat-risk");
+    const statPositive = document.getElementById("stat-positive");
+    const statMode = document.getElementById("stat-mode");
+
+    let questions = [];
+    let currentIndex = 0;
+    let responses = [];
+    let turnResults = [];
+    let busy = false;
+    let autoDemoRunning = false;
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function setStatus(ok, text) {
+      statusText.textContent = text;
+      statusDot.classList.toggle("live", ok);
+    }
+
+    function zhDuration(value) {
+      return {
+        none: "无",
+        less_than_2_weeks: "少于2周",
+        "2_to_4_weeks": "2到4周",
+        "1_to_3_months": "1到3个月",
+        more_than_3_months: "3个月以上",
+        unclear: "不明确"
+      }[value] || value;
+    }
+
+    function zhFrequency(value) {
+      return {
+        none: "无",
+        rare: "很少",
+        sometimes: "有时",
+        often: "经常",
+        almost_every_day: "几乎每天",
+        unclear: "不明确"
+      }[value] || value;
+    }
+
+    function zhSeverity(value) {
+      return {
+        none: "无",
+        mild: "轻度",
+        moderate: "中度",
+        severe: "重度"
+      }[value] || value;
+    }
+
+    function zhPolarity(value) {
+      return {
+        support: "支持症状存在",
+        deny: "否定症状存在",
+        uncertain: "信息不足"
+      }[value] || value;
+    }
+
+    function zhOverallRisk(value) {
+      return {
+        low: "低风险",
+        medium: "中风险",
+        high: "高风险"
+      }[value] || value;
+    }
+
+    function zhClassification(value) {
+      return {
+        normal: "正常",
+        mild_depression: "轻度抑郁",
+        moderate_depression: "中度抑郁",
+        moderately_severe_depression: "中重度抑郁",
+        severe_depression: "重度抑郁",
+        uncertain: "不确定"
+      }[value] || value;
+    }
+
+    function updateStats() {
+      statCompleted.textContent = String(responses.length);
+      statRisk.textContent = String(turnResults.filter(item => item.risk_flag).length);
+      statPositive.textContent = String(turnResults.filter(item => item.polarity === "support").length);
+      statMode.textContent = autoDemoRunning ? "自动演示" : "手动";
+    }
+
+    function updateProgress() {
+      const total = questions.length || 16;
+      const completed = responses.length;
+      const percent = Math.round((completed / total) * 100);
+      progressText.textContent = `第 ${Math.min(currentIndex + 1, total)} / ${total} 题`;
+      progressPercent.textContent = `${percent}%`;
+      progressFill.style.width = `${percent}%`;
+      updateStats();
+      renderQuestionList();
+    }
+
+    function renderQuestionList() {
+      questionListNode.innerHTML = questions.map((question, index) => {
+        const cls = index < responses.length ? "question-item done" : index === currentIndex ? "question-item current" : "question-item";
+        return `
+          <div class="${cls}">
+            <div class="question-item-index">第 ${question.question_id} 题</div>
+            <div class="question-item-text">${escapeHtml(question.question_text)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderQuestion() {
+      const question = questions[currentIndex];
+      if (!question) {
+        questionIndexNode.textContent = "已完成";
+        questionTextNode.textContent = "16 轮访谈已完成，等待查看最终汇总结果。";
+        answerInput.disabled = true;
+        submitBtn.disabled = true;
+        return;
+      }
+      questionIndexNode.textContent = `第 ${question.question_id} 题`;
+      questionTextNode.textContent = question.question_text;
+      updateProgress();
+      if (!autoDemoRunning) {
+        answerInput.focus();
+      }
+    }
+
+    function appendTurnResult(result) {
+      turnResults.push(result);
+      const node = document.createElement("article");
+      node.className = "result-card";
+      node.innerHTML = `
+        <div class="result-top">
+          <div>
+            <div class="result-label">Turn ${result.question_id}</div>
+            <h3>${escapeHtml(result.question_text)}</h3>
+          </div>
+          <div class="pill ${result.risk_flag ? "risk" : result.polarity === "deny" ? "safe" : "warn"}">
+            ${result.risk_flag ? "risk_flag=true" : "risk_flag=false"}
+          </div>
+        </div>
+        <div class="result-block"><div class="result-label">受试者回答</div><div>${escapeHtml(result.answer)}</div></div>
+        <div class="pill-row">
+          <span class="pill">${escapeHtml(result.symptom)}</span>
+          <span class="pill">${escapeHtml(zhDuration(result.duration))}</span>
+          <span class="pill">${escapeHtml(zhFrequency(result.frequency))}</span>
+          <span class="pill">${escapeHtml(zhSeverity(result.severity))}</span>
+          <span class="pill ${result.polarity === "support" ? "risk" : result.polarity === "deny" ? "safe" : "warn"}">${escapeHtml(zhPolarity(result.polarity))}</span>
+          <span class="pill">置信度=${Number(result.confidence).toFixed(2)}</span>
+        </div>
+        <div class="result-block"><div class="result-label">持续时间 / 频率说明</div><div>${escapeHtml(result.duration_text)} / ${escapeHtml(result.frequency_text)}</div></div>
+        <div class="result-block"><div class="result-label">解释说明</div><div>${escapeHtml(result.explanation)}</div></div>
+        <div class="result-block"><div class="result-label">复核说明</div><div>${escapeHtml(result.review_notes)}</div></div>
+        <div class="result-block">
+          <div class="result-label">依据证据</div>
+          <ul class="evidence-list">${result.evidence.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+      `;
+      feed.appendChild(node);
+      feed.scrollTop = feed.scrollHeight;
+      updateStats();
+    }
+
+    function appendSummary(result) {
+      const node = document.createElement("article");
+      node.className = "result-card summary-card";
+      node.innerHTML = `
+        <div class="summary-hero">
+          <div>
+            <div class="result-label">最终整场总结</div>
+            <h3 style="margin:0 0 10px;">${escapeHtml(zhClassification(result.depression_classification))}</h3>
+            <div>${escapeHtml(result.summary)}</div>
+          </div>
+          <div class="summary-score">
+            <div class="result-label">总体置信度</div>
+            <strong>${Number(result.overall_confidence).toFixed(2)}</strong>
+            <div class="pill ${result.overall_risk === "high" ? "risk" : result.overall_risk === "low" ? "safe" : "warn"}" style="margin-top:10px;">
+              ${escapeHtml(zhOverallRisk(result.overall_risk))}
+            </div>
+          </div>
+        </div>
+        <div class="result-block"><div class="result-label">解释说明</div><div>${escapeHtml(result.explanation)}</div></div>
+        <div class="result-block">
+          <div class="result-label">症状总结</div>
+          <ul class="summary-list">${result.symptom_summary.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+        <div class="result-block">
+          <div class="result-label">关键发现</div>
+          <ul class="summary-list">${result.key_findings.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+        <div class="result-block">
+          <div class="result-label">缺失信息</div>
+          <ul class="summary-list">${result.missing_information.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+      `;
+      feed.appendChild(node);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function appendSystemCard(title, message) {
+      const node = document.createElement("article");
+      node.className = "result-card";
+      node.innerHTML = `<div class="result-label">${escapeHtml(title)}</div><div>${escapeHtml(message)}</div>`;
+      feed.appendChild(node);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function resetInterviewState() {
+      currentIndex = 0;
+      responses = [];
+      turnResults = [];
+      busy = false;
+      autoDemoRunning = false;
+      answerInput.disabled = false;
+      answerInput.value = "";
+      feed.innerHTML = `
+        <div class="result-card">
+          <div class="result-label">已就绪</div>
+          <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的抑郁分类总结。</div>
+        </div>
+      `;
+      pauseBanner.hidden = true;
+      submitBtn.disabled = false;
+      clearBtn.disabled = false;
+      demoBtn.disabled = false;
+      resetBtn.disabled = false;
+      renderQuestion();
+      updateStats();
+    }
+
+    async function analyzeSingleAnswer(answer) {
+      const question = questions[currentIndex];
+      const response = await fetch("/api/analyze-turn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: question.question_id,
+          answer
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.detail || "单题分析失败");
+      }
+      responses.push({ question_id: question.question_id, answer });
+      appendTurnResult(payload);
+      currentIndex += 1;
+      answerInput.value = "";
+      updateProgress();
+    }
+
+    async function analyzeCurrentTurn() {
+      if (busy) return;
+      const answer = answerInput.value.trim();
+      if (!answer || !questions[currentIndex]) return;
+
+      busy = true;
+      submitBtn.disabled = true;
+      clearBtn.disabled = true;
+      demoBtn.disabled = true;
+
+      try {
+        await analyzeSingleAnswer(answer);
+
+        if (responses.length >= questions.length) {
+          appendSystemCard("整场总结", "16 个问题已完成，正在调用整场汇总分析。");
+          await analyzeSession();
+          renderQuestion();
+          return;
+        }
+
+        if (responses.length % 2 === 0) {
+          pauseBanner.hidden = false;
+          await sleep(1200);
+          pauseBanner.hidden = true;
+        }
+
+        renderQuestion();
+      } catch (error) {
+        appendSystemCard("错误", error.message || "请求失败");
+      } finally {
+        busy = false;
+        submitBtn.disabled = false;
+        clearBtn.disabled = false;
+        demoBtn.disabled = false;
+      }
+    }
+
+    async function analyzeSession() {
+      const response = await fetch("/api/analyze-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: `session-${Date.now()}`,
+          responses
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.detail || "整场汇总分析失败");
+      }
+      progressText.textContent = `第 ${questions.length} / ${questions.length} 题`;
+      progressPercent.textContent = "100%";
+      progressFill.style.width = "100%";
+      appendSummary(payload);
+    }
+
+    async function runAutoDemo() {
+      if (busy || autoDemoRunning || !questions.length) return;
+      resetInterviewState();
+      autoDemoRunning = true;
+      updateStats();
+      appendSystemCard("自动演示", "正在使用预置回答自动跑完整个 16 轮流程。");
+      submitBtn.disabled = true;
+      clearBtn.disabled = true;
+      demoBtn.disabled = true;
+      answerInput.disabled = true;
+
+      try {
+        for (let i = 0; i < questions.length; i += 1) {
+          const answer = DEMO_ANSWERS[i] || "暂时没有额外回答。";
+          answerInput.value = answer;
+          await sleep(300);
+          await analyzeSingleAnswer(answer);
+
+          if (responses.length < questions.length && responses.length % 2 === 0) {
+            pauseBanner.hidden = false;
+            await sleep(1200);
+            pauseBanner.hidden = true;
+          }
+
+          renderQuestion();
+        }
+
+        appendSystemCard("整场总结", "16 个问题已完成，正在调用整场汇总分析。");
+        await analyzeSession();
+        renderQuestion();
+        appendSystemCard("自动演示", "自动演示已完成。你可以点击“重置本轮访谈”重新开始。");
+      } catch (error) {
+        appendSystemCard("错误", error.message || "自动演示失败");
+      } finally {
+        autoDemoRunning = false;
+        busy = false;
+        answerInput.disabled = true;
+        submitBtn.disabled = true;
+        clearBtn.disabled = false;
+        demoBtn.disabled = false;
+        updateStats();
+      }
+    }
+
+    async function bootstrap() {
+      try {
+        const [healthResponse, questionsResponse] = await Promise.all([
+          fetch("/health"),
+          fetch("/api/questions")
+        ]);
+        if (!healthResponse.ok || !questionsResponse.ok) {
+          throw new Error("后端不可用");
+        }
+        questions = await questionsResponse.json();
+        setStatus(true, "后端已就绪");
+        renderQuestionList();
+        resetInterviewState();
+      } catch (error) {
+        setStatus(false, "后端不可用");
+        appendSystemCard("错误", "无法加载后端服务或问题列表。");
+        questionIndexNode.textContent = "不可用";
+        questionTextNode.textContent = "后端不可用，请先启动服务。";
+        answerInput.disabled = true;
+        submitBtn.disabled = true;
+        demoBtn.disabled = true;
+      }
+    }
+
+    submitBtn.addEventListener("click", analyzeCurrentTurn);
+    clearBtn.addEventListener("click", () => {
+      answerInput.value = "";
+      answerInput.focus();
+    });
+    demoBtn.addEventListener("click", runAutoDemo);
+    resetBtn.addEventListener("click", resetInterviewState);
+    answerInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        analyzeCurrentTurn();
+      }
+    });
+
+    bootstrap();
+  </script>
+</body>
+</html>
