@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Console</title>
+  <style>
+    :root {
+      --bg: #f3ede2;
+      --bg-strong: #e8dcc8;
+      --panel: rgba(255, 250, 242, 0.82);
+      --panel-strong: rgba(255, 248, 238, 0.95);
+      --line: rgba(62, 42, 24, 0.14);
+      --text: #24170d;
+      --muted: #6f5d4c;
+      --accent: #b64d24;
+      --accent-soft: #f0b26d;
+      --shadow: 0 18px 50px rgba(62, 42, 24, 0.12);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(182, 77, 36, 0.16), transparent 28%),
+        radial-gradient(circle at right 18%, rgba(240, 178, 109, 0.22), transparent 24%),
+        linear-gradient(135deg, #f8f1e6 0%, #efe1cc 45%, #e8dbc8 100%);
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 40px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+
+    .hero-card,
+    .meta-card,
+    .chat-shell {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+    }
+
+    .hero-card {
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      right: -40px;
+      bottom: -60px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(182, 77, 36, 0.18), rgba(240, 178, 109, 0.02));
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(62, 42, 24, 0.08);
+    }
+
+    h1 {
+      margin: 16px 0 12px;
+      max-width: 12ch;
+      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      font-size: clamp(36px, 6vw, 66px);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 44ch;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .meta-card {
+      padding: 24px;
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .meta-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .meta-row strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .chat-shell {
+      padding: 18px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .toolbar h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #d08236;
+      box-shadow: 0 0 0 6px rgba(208, 130, 54, 0.12);
+      transition: background 0.2s ease;
+    }
+
+    .status-dot.live {
+      background: #2f8f5b;
+      box-shadow: 0 0 0 6px rgba(47, 143, 91, 0.12);
+    }
+
+    .messages {
+      min-height: 420px;
+      max-height: 62vh;
+      overflow: auto;
+      padding: 10px;
+      border-radius: 20px;
+      background: var(--panel-strong);
+      border: 1px solid rgba(62, 42, 24, 0.08);
+    }
+
+    .message {
+      max-width: 86%;
+      padding: 14px 16px;
+      margin: 10px 0;
+      border-radius: 18px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+      animation: rise 0.24s ease;
+    }
+
+    .message.user {
+      margin-left: auto;
+      color: #fff8f2;
+      background: linear-gradient(135deg, #bd5127, #d67b38);
+      border-bottom-right-radius: 6px;
+    }
+
+    .message.agent {
+      background: #fffdf8;
+      border: 1px solid rgba(62, 42, 24, 0.08);
+      border-bottom-left-radius: 6px;
+    }
+
+    .message.system {
+      max-width: 100%;
+      background: rgba(182, 77, 36, 0.08);
+      color: var(--muted);
+      border: 1px dashed rgba(182, 77, 36, 0.18);
+    }
+
+    .composer {
+      margin-top: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      border: 1px solid rgba(62, 42, 24, 0.12);
+      background: rgba(255, 255, 255, 0.56);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: transform 0.16s ease, background 0.16s ease;
+    }
+
+    .chip:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 112px;
+      resize: vertical;
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(62, 42, 24, 0.12);
+      background: rgba(255, 252, 247, 0.9);
+      color: var(--text);
+      font: inherit;
+      line-height: 1.6;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: rgba(182, 77, 36, 0.5);
+      box-shadow: 0 0 0 4px rgba(182, 77, 36, 0.08);
+    }
+
+    button.send {
+      align-self: end;
+      min-width: 160px;
+      padding: 0 22px;
+      height: 56px;
+      border: 0;
+      border-radius: 18px;
+      color: #fff8f2;
+      background: linear-gradient(135deg, #1c1b19, #4a3726);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    button.send:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    button.send:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .input-row {
+        grid-template-columns: 1fr;
+      }
+
+      button.send {
+        width: 100%;
+      }
+
+      .messages {
+        min-height: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <article class="hero-card">
+        <span class="eyebrow">Local Agent Backend</span>
+        <h1>Chat with your backend agent.</h1>
+        <p>这是一个先行版本的前端页面，直接连接当前 FastAPI 后端。页面默认请求本地 <code>/api/chat</code>，方便你后续继续拆出独立前端工程。</p>
+      </article>
+      <aside class="meta-card">
+        <div class="meta-row"><span>Service</span><strong>http://127.0.0.1:8080</strong></div>
+        <div class="meta-row"><span>Endpoint</span><strong>POST /api/chat</strong></div>
+        <div class="meta-row"><span>Providers</span><strong>Gemini / Zhipu</strong></div>
+        <div class="meta-row"><span>Mode</span><strong>Single-turn chat</strong></div>
+      </aside>
+    </section>
+
+    <section class="chat-shell">
+      <div class="toolbar">
+        <h2>Agent Console</h2>
+        <div class="status">
+          <span id="status-dot" class="status-dot"></span>
+          <span id="status-text">Checking service...</span>
+        </div>
+      </div>
+
+      <div id="messages" class="messages">
+        <div class="message system">服务启动后，这里会显示对话内容。你可以先试试天气查询、简单问答，或者让模型给出一段简短建议。</div>
+      </div>
+
+      <div class="composer">
+        <div class="chips">
+          <button class="chip" type="button" data-prompt="北京天气怎么样？顺便告诉我 2 + 2 等于几。">天气 + 计算</button>
+          <button class="chip" type="button" data-prompt="请用中文列出三条学习 Python 的建议。">学习建议</button>
+          <button class="chip" type="button" data-prompt="What is the weather in beijing? Also tell me 2 + 2.">Tool test</button>
+        </div>
+
+        <div class="input-row">
+          <textarea id="input" placeholder="输入你的问题。按 Enter 发送，Shift + Enter 换行。"></textarea>
+          <button id="send" class="send" type="button">Send Request</button>
+        </div>
+      </div>
+
+      <div class="footer-note">当前页面是同源调用后端接口；后续拆前端时，保持请求协议不变即可继续复用。</div>
+    </section>
+  </main>
+
+  <script>
+    const statusDot = document.getElementById("status-dot");
+    const statusText = document.getElementById("status-text");
+    const messages = document.getElementById("messages");
+    const input = document.getElementById("input");
+    const send = document.getElementById("send");
+    const chips = document.querySelectorAll(".chip");
+
+    function appendMessage(role, text) {
+      const node = document.createElement("div");
+      node.className = `message ${role}`;
+      node.textContent = text;
+      messages.appendChild(node);
+      messages.scrollTop = messages.scrollHeight;
+      return node;
+    }
+
+    async function checkHealth() {
+      try {
+        const response = await fetch("/health");
+        if (!response.ok) throw new Error("health check failed");
+        statusDot.classList.add("live");
+        statusText.textContent = "Service ready on :8080";
+      } catch (error) {
+        statusDot.classList.remove("live");
+        statusText.textContent = "Service unavailable";
+      }
+    }
+
+    async function submitMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendMessage("user", text);
+      input.value = "";
+      send.disabled = true;
+      const pending = appendMessage("system", "Agent is thinking...");
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text }),
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.detail || "request failed");
+        }
+
+        const payload = await response.json();
+        pending.remove();
+        appendMessage("agent", payload.reply);
+      } catch (error) {
+        pending.textContent = `Request failed: ${error.message}`;
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    }
+
+    send.addEventListener("click", submitMessage);
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        submitMessage();
+      }
+    });
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        input.value = chip.dataset.prompt;
+        input.focus();
+      });
+    });
+
+    checkHealth();
+    input.focus();
+  </script>
+</body>
+</html>
