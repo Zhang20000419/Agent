@@ -46,6 +46,12 @@ class TurnAnalysis(BaseModel):
     risk_flag: bool
 
 
+class ReviewDecision(BaseModel):
+    passed: bool
+    issues: list[str]
+    guidance_for_retry: str
+
+
 class SessionInput(BaseModel):
     session_id: str
     responses: list[TurnInput]

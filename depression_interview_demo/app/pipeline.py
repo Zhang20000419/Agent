@@ -6,8 +6,8 @@ from langchain_core.output_parsers import PydanticOutputParser
 
 from app.interview_questions import QUESTION_INDEX
 from app.llm_config import build_chat_model
-from app.prompts import EXTRACTOR_SYSTEM_PROMPT, REVIEWER_SYSTEM_PROMPT, SUMMARIZER_SYSTEM_PROMPT
-from app.schemas import SessionAnalysis, TurnAnalysis
+from app.prompts import EXTRACTOR_SYSTEM_PROMPT, REVIEWER_SYSTEM_PROMPT, REVIEW_DECISION_SYSTEM_PROMPT, SUMMARIZER_SYSTEM_PROMPT
+from app.schemas import ReviewDecision, SessionAnalysis, TurnAnalysis
 
 
 @lru_cache(maxsize=1)
@@ -23,6 +23,11 @@ def get_turn_parser():
 @lru_cache(maxsize=1)
 def get_session_parser():
     return PydanticOutputParser(pydantic_object=SessionAnalysis)
+
+
+@lru_cache(maxsize=1)
+def get_review_decision_parser():
+    return PydanticOutputParser(pydantic_object=ReviewDecision)
 
 
 def _extract_content(response) -> str:
@@ -192,34 +197,72 @@ def _normalize_turn_analysis(turn: TurnAnalysis) -> TurnAnalysis:
     return turn
 
 
+def _review_decision(question_id: int, question_text: str, answer: str, candidate: TurnAnalysis, language: str) -> ReviewDecision:
+    parser = get_review_decision_parser()
+    prompt = (
+        f"{REVIEW_DECISION_SYSTEM_PROMPT}\n\n"
+        f"{_language_instruction(language)}\n\n"
+        f"{parser.get_format_instructions()}\n\n"
+        f"question_id: {question_id}\n"
+        f"question_text: {question_text}\n"
+        f"answer: {answer}\n"
+        f"candidate_result: {json.dumps(candidate.model_dump(mode='json'), ensure_ascii=False)}\n"
+    )
+    return _invoke_structured(prompt, parser)
+
+
 def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
     question = QUESTION_INDEX[question_id]
     language = _detect_language(answer or question.question_text)
     turn_parser = get_turn_parser()
-    extractor_prompt = (
-        f"{EXTRACTOR_SYSTEM_PROMPT}\n\n"
-        f"{_language_instruction(language)}\n\n"
-        f"{turn_parser.get_format_instructions()}\n\n"
-        f"question_id: {question.question_id}\n"
-        f"question_text: {question.question_text}\n"
-        f"answer: {answer}\n"
-    )
-    draft = _invoke_structured(extractor_prompt, turn_parser)
+    retry_guidance = ""
+    last_reviewed = None
 
-    reviewer_prompt = (
-        f"{REVIEWER_SYSTEM_PROMPT}\n\n"
-        f"{_language_instruction(language)}\n\n"
-        f"{turn_parser.get_format_instructions()}\n\n"
-        f"question_id: {question.question_id}\n"
-        f"question_text: {question.question_text}\n"
-        f"answer: {answer}\n"
-        f"extractor_result: {json.dumps(draft.model_dump(mode='json'), ensure_ascii=False)}\n"
-    )
-    reviewed = _invoke_structured(reviewer_prompt, turn_parser)
-    reviewed.question_id = question.question_id
-    reviewed.question_text = question.question_text
-    reviewed.answer = answer
-    return _normalize_turn_analysis(reviewed)
+    for attempt in range(3):
+        extractor_prompt = (
+            f"{EXTRACTOR_SYSTEM_PROMPT}\n\n"
+            f"{_language_instruction(language)}\n\n"
+            f"{turn_parser.get_format_instructions()}\n\n"
+            f"question_id: {question.question_id}\n"
+            f"question_text: {question.question_text}\n"
+            f"answer: {answer}\n"
+            f"retry_guidance: {retry_guidance or '首次抽取，无额外修正要求'}\n"
+        )
+        draft = _invoke_structured(extractor_prompt, turn_parser)
+
+        reviewer_prompt = (
+            f"{REVIEWER_SYSTEM_PROMPT}\n\n"
+            f"{_language_instruction(language)}\n\n"
+            f"{turn_parser.get_format_instructions()}\n\n"
+            f"question_id: {question.question_id}\n"
+            f"question_text: {question.question_text}\n"
+            f"answer: {answer}\n"
+            f"extractor_result: {json.dumps(draft.model_dump(mode='json'), ensure_ascii=False)}\n"
+        )
+        reviewed = _invoke_structured(reviewer_prompt, turn_parser)
+        reviewed.question_id = question.question_id
+        reviewed.question_text = question.question_text
+        reviewed.answer = answer
+        reviewed = _normalize_turn_analysis(reviewed)
+        last_reviewed = reviewed
+
+        decision = _review_decision(
+            question_id=question.question_id,
+            question_text=question.question_text,
+            answer=answer,
+            candidate=reviewed,
+            language=language,
+        )
+        if decision.passed:
+            if attempt > 0:
+                note = reviewed.review_notes.strip()
+                reviewed.review_notes = f"{note} 已通过第{attempt + 1}轮复核。".strip()
+            return reviewed
+        retry_guidance = decision.guidance_for_retry or "请严格依据原回答修正无依据字段，并降低过度推断。"
+
+    assert last_reviewed is not None
+    last_reviewed.review_notes = f"{last_reviewed.review_notes} 经过多轮复核后仍存在疑点，已返回最后一版保守结果。".strip()
+    return _normalize_turn_analysis(last_reviewed)
 
 
 def analyze_session(session_id: str, responses: list[dict]) -> SessionAnalysis:
