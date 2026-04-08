@@ -44,6 +44,9 @@ class TurnAnalysis(BaseModel):
     explanation: str = Field(description="Short explainable rationale grounded in the evidence.")
     review_notes: str
     risk_flag: bool
+    review_passed: bool = Field(default=True, description="当前结果是否通过最终复核裁决。")
+    retry_count: int = Field(default=0, ge=0, description="本题在通过最终复核前发生的重试次数。")
+    review_issues: list[str] = Field(default_factory=list, description="复核过程中发现的问题列表。")
 
 
 class ReviewDecision(BaseModel):

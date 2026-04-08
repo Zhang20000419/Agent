@@ -765,10 +765,16 @@
           <span class="pill">${escapeHtml(zhSeverity(result.severity))}</span>
           <span class="pill ${result.polarity === "support" ? "risk" : result.polarity === "deny" ? "safe" : "warn"}">${escapeHtml(zhPolarity(result.polarity))}</span>
           <span class="pill">置信度=${Number(result.confidence).toFixed(2)}</span>
+          <span class="pill ${result.review_passed ? "safe" : "warn"}">${result.review_passed ? "复核通过" : "复核未完全通过"}</span>
+          <span class="pill">重试次数=${Number(result.retry_count)}</span>
         </div>
         <div class="result-block"><div class="result-label">持续时间 / 频率说明</div><div>${escapeHtml(result.duration_text)} / ${escapeHtml(result.frequency_text)}</div></div>
         <div class="result-block"><div class="result-label">解释说明</div><div>${escapeHtml(result.explanation)}</div></div>
         <div class="result-block"><div class="result-label">复核说明</div><div>${escapeHtml(result.review_notes)}</div></div>
+        <div class="result-block">
+          <div class="result-label">复核发现的问题</div>
+          <ul class="evidence-list">${(result.review_issues || []).length ? result.review_issues.map(item => `<li>${escapeHtml(item)}</li>`).join("") : "<li>无</li>"}</ul>
+        </div>
         <div class="result-block">
           <div class="result-label">依据证据</div>
           <ul class="evidence-list">${result.evidence.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>

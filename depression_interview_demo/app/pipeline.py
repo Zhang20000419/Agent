@@ -193,6 +193,7 @@ def _normalize_turn_analysis(turn: TurnAnalysis) -> TurnAnalysis:
     if not turn.explanation:
         turn.explanation = "当前模型没有给出充分的可解释说明，因此该结果应谨慎使用。"
 
+    turn.retry_count = max(0, turn.retry_count)
     turn.confidence = max(0.0, min(1.0, turn.confidence))
     return turn
 
@@ -217,6 +218,7 @@ def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
     turn_parser = get_turn_parser()
     retry_guidance = ""
     last_reviewed = None
+    collected_issues = []
 
     for attempt in range(3):
         extractor_prompt = (
@@ -254,13 +256,20 @@ def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
             language=language,
         )
         if decision.passed:
+            reviewed.review_passed = True
+            reviewed.retry_count = attempt
+            reviewed.review_issues = collected_issues + decision.issues
             if attempt > 0:
                 note = reviewed.review_notes.strip()
                 reviewed.review_notes = f"{note} 已通过第{attempt + 1}轮复核。".strip()
             return reviewed
+        collected_issues.extend(decision.issues)
         retry_guidance = decision.guidance_for_retry or "请严格依据原回答修正无依据字段，并降低过度推断。"
 
     assert last_reviewed is not None
+    last_reviewed.review_passed = False
+    last_reviewed.retry_count = 2
+    last_reviewed.review_issues = collected_issues
     last_reviewed.review_notes = f"{last_reviewed.review_notes} 经过多轮复核后仍存在疑点，已返回最后一版保守结果。".strip()
     return _normalize_turn_analysis(last_reviewed)
 
