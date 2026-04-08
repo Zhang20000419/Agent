@@ -11,6 +11,7 @@ from app.schemas import HealthResponse, SessionAnalysis, SessionInput, TurnAnaly
 app = FastAPI(title="Depression Interview Demo", version="0.1.0")
 static_dir = Path(__file__).parent / "static"
 
+# 前端页面和后端 API 复用同一个 FastAPI 服务，便于本地直接演示。
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
@@ -31,6 +32,7 @@ def get_questions():
 
 @app.post("/api/analyze-turn", response_model=TurnAnalysis)
 def analyze_turn_api(request: TurnInput):
+    # 单题接口用于前端逐题展示中间分析结果。
     if request.question_id not in QUESTION_INDEX:
         raise HTTPException(status_code=404, detail="question_id not found")
     if not request.answer.strip():
@@ -40,6 +42,7 @@ def analyze_turn_api(request: TurnInput):
 
 @app.post("/api/analyze-session", response_model=SessionAnalysis)
 def analyze_session_api(request: SessionInput):
+    # 整场接口用于在多轮分析完成后触发最终综合判断。
     if not request.responses:
         raise HTTPException(status_code=400, detail="responses cannot be empty")
     return analyze_session(

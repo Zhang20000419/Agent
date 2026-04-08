@@ -73,5 +73,16 @@ class SessionAnalysis(BaseModel):
     explanation: str
 
 
+class SessionSummary(BaseModel):
+    overall_risk: OverallRisk
+    depression_classification: DepressionClassification
+    overall_confidence: float = Field(ge=0.0, le=1.0, description="0到1之间的小数，必须使用阿拉伯数字。")
+    summary: str
+    symptom_summary: list[str]
+    key_findings: list[str]
+    missing_information: list[str]
+    explanation: str
+
+
 class HealthResponse(BaseModel):
     status: str
