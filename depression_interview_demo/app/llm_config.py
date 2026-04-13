@@ -28,6 +28,7 @@ def _bootstrap_shell_env() -> None:
 
 
 def _read_shell_env(name: str) -> str | None:
+    # 用登录 shell 读取变量，兼容只写在 ~/.zshrc 里的配置。
     try:
         result = subprocess.run(
             ["/bin/zsh", "-lic", f"printenv {name}"],
@@ -43,6 +44,7 @@ def _read_shell_env(name: str) -> str | None:
 
 
 def _get_env(name: str) -> str | None:
+    # 优先取当前进程环境，缺失时再回落到 shell 查询。
     return os.getenv(name) or _read_shell_env(name)
 
 
@@ -84,8 +86,8 @@ def _build_zhipu_model():
 
     model_name = _get_env("ZHIPU_MODEL") or "glm-4-flash"
 
-    # 社区版 ChatZhipuAI 把超时写死为 60 秒，这里做一个轻量包装，
-    # 允许配置更长超时，并在免费额度下遇到 429 时自动退避重试。
+    # 社区版 ChatZhipuAI 的默认超时偏短。
+    # 这里做轻量封装，允许项目按环境变量配置超时和 429 重试。
     class PatchedChatZhipuAI(ChatZhipuAI):
         request_timeout: float = 180.0
         max_retries_429: int = 3

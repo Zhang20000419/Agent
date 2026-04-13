@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>抑郁访谈工作台</title>
+  <title>心理访谈工作台</title>
   <style>
     :root {
       --bg: #ecf1f7;
@@ -118,12 +118,33 @@
       display: grid;
       grid-template-columns: 300px 420px 1fr;
       gap: 18px;
-      align-items: start;
+      align-items: stretch;
+      height: min(760px, calc(100vh - 220px));
     }
 
     .stack {
       display: grid;
       gap: 18px;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .layout > .stack:first-child {
+      grid-template-rows: minmax(240px, 0.82fr) minmax(280px, 1.18fr);
+      align-content: start;
+    }
+
+    .layout > .stack:nth-child(2),
+    .layout > .stack:nth-child(3) {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .stack > .card.panel {
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
 
     .panel h2 {
@@ -212,17 +233,22 @@
     .question-list {
       display: grid;
       gap: 8px;
-      max-height: 72vh;
+      flex: 1;
+      min-height: 0;
+      align-content: start;
       overflow: auto;
       padding-right: 4px;
     }
 
     .question-item {
+      width: 100%;
+      text-align: left;
       border: 1px solid rgba(20, 34, 57, 0.08);
       border-radius: 16px;
       background: #f9fbfd;
       padding: 12px 14px;
       transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+      cursor: pointer;
     }
 
     .question-item.current {
@@ -234,6 +260,10 @@
     .question-item.done {
       border-color: rgba(17, 135, 95, 0.24);
       background: rgba(17, 135, 95, 0.06);
+    }
+
+    .question-item.inspected {
+      box-shadow: inset 0 0 0 1px rgba(19, 34, 56, 0.18);
     }
 
     .question-item-index {
@@ -248,6 +278,32 @@
     .question-item-text {
       font-size: 13px;
       line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .review-box {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 16px;
+      border-radius: 18px;
+      background: #f7fafc;
+      border: 1px solid rgba(20, 34, 57, 0.08);
+    }
+
+    .review-box h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .review-block {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .review-block strong {
       color: var(--ink);
     }
 
@@ -347,20 +403,11 @@
       line-height: 1.65;
     }
 
-    .pause-banner {
-      margin-top: 12px;
-      padding: 14px 16px;
-      border-radius: 16px;
-      background: rgba(29, 99, 214, 0.08);
-      color: var(--accent);
-      font-size: 14px;
-      font-weight: 800;
-    }
-
     .feed {
       display: grid;
       gap: 14px;
-      max-height: 80vh;
+      flex: 1;
+      min-height: 0;
       overflow: auto;
       padding-right: 4px;
     }
@@ -454,6 +501,7 @@
     @media (max-width: 1280px) {
       .layout {
         grid-template-columns: 280px 1fr;
+        height: auto;
       }
 
       .layout > .stack:nth-child(2) {
@@ -469,6 +517,7 @@
       .hero,
       .layout {
         grid-template-columns: 1fr;
+        height: auto;
       }
 
       .feed,
@@ -482,13 +531,13 @@
   <main class="page">
     <section class="hero">
       <article class="card hero-main">
-        <span class="eyebrow">高敏感医疗原型</span>
-        <h1>抑郁访谈工作台</h1>
-        <p>页面提供手动访谈和自动演示两种模式。每次回答都会立即显示结构化识别结果；每两题之间自动停顿约 1.2 秒，便于观察中间结果和风险变化。16 轮结束后，系统会自动输出抑郁分类、症状总结和可解释信息。</p>
+        <span class="eyebrow">高敏感访谈原型</span>
+        <h1>心理访谈工作台</h1>
+        <p>页面提供手动访谈和自动演示两种模式。每次回答都会立即显示结构化识别结果；全部问题结束后，系统会自动输出整场分类、关键线索和可解释信息。</p>
       </article>
       <aside class="card hero-side">
         <div class="meta-row"><span>服务地址</span><strong>http://127.0.0.1:8090</strong></div>
-        <div class="meta-row"><span>访谈形式</span><strong>16 轮固定问题</strong></div>
+        <div class="meta-row"><span>访谈形式</span><strong>14 轮固定问题</strong></div>
         <div class="meta-row"><span>输出内容</span><strong>逐题结构化结果 + 整场总结</strong></div>
         <div class="meta-row"><span>运行模式</span><strong>手动访谈 / 自动演示</strong></div>
       </aside>
@@ -499,6 +548,13 @@
         <div class="card panel">
           <h2>访谈目录</h2>
           <div id="question-list" class="question-list"></div>
+        </div>
+        <div class="card panel">
+          <h2>历史回看</h2>
+          <div id="review-panel" class="review-box">
+            <h3>当前还没有可回看的回答</h3>
+            <div class="review-block">完成题目后，点击左侧目录中的已完成问题，可以查看当时的回答和分析结果。</div>
+          </div>
         </div>
       </div>
 
@@ -530,7 +586,7 @@
 
           <div class="progress-wrap">
             <div class="progress-header">
-              <span id="progress-text">第 0 / 16 题</span>
+              <span id="progress-text">第 0 / 14 题</span>
               <span id="progress-percent">0%</span>
             </div>
             <div class="progress-bar">
@@ -550,12 +606,11 @@
             <button id="clear-btn" class="ghost" type="button">清空输入</button>
           </div>
           <div class="actions secondary-row">
-            <button id="demo-btn" class="accent" type="button">自动演示 16 题</button>
+            <button id="demo-btn" class="accent" type="button">自动演示 14 题</button>
             <button id="reset-btn" class="ghost" type="button">重置本轮访谈</button>
           </div>
 
-          <div id="pause-banner" class="pause-banner" hidden>正在短暂停顿，即将进入下一题...</div>
-          <div class="hint">手动模式下使用当前输入作答；自动演示模式会使用预置的 16 条样例回答依次提交。按 <code>Ctrl/Cmd + Enter</code> 可以提交当前回答。</div>
+          <div class="hint">手动模式下使用当前输入作答；自动演示模式会使用预置的 14 条样例回答依次提交。按 <code>Ctrl/Cmd + Enter</code> 可以提交当前回答。</div>
         </div>
       </div>
 
@@ -565,7 +620,7 @@
           <div id="feed" class="feed">
             <div class="result-card">
               <div class="result-label">已就绪</div>
-              <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的抑郁分类总结。</div>
+              <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的分类总结。</div>
             </div>
           </div>
         </div>
@@ -575,22 +630,20 @@
 
   <script>
     const DEMO_ANSWERS = [
-      "最近三周几乎每天都觉得很压抑，早上醒来就提不起精神。",
-      "以前喜欢的事情最近都不太想做了，连打游戏也没兴趣。",
-      "这段时间经常失眠，半夜会醒两三次。",
-      "胃口差了一些，最近吃得少，也瘦了一点。",
-      "常常觉得很累，稍微做点事就没有力气。",
-      "有时候会觉得自己很差劲，好像什么都做不好。",
-      "注意力明显变差，看东西老是走神，做决定很慢。",
-      "整个人动作慢了很多，也有时候会烦躁坐不住。",
-      "偶尔会想活着挺没意思，但目前没有真正想伤害自己。",
-      "已经影响到工作了，效率下降，也不太想见朋友。",
-      "大概是三周前开始越来越明显的。",
-      "这些状态不是偶尔，而是经常出现，差不多每天都有。",
-      "每次情绪上来会持续好几个小时，有时半天都缓不过来。",
-      "如果分级的话，我觉得更接近中等偏重。",
-      "家里人陪我说话的时候会稍微好一点。",
-      "我愿意继续寻求帮助，也可以考虑找专业人员聊聊。"
+      "今天整体还行，上午上课有点累，下午跟朋友聊了会儿天，心情稍微放松一些。",
+      "我家乡在杭州，小时候一直在那边生活，后来才出来上学。",
+      "我很喜欢家乡的西湖和龙井茶，吃的方面会想念片儿川和小笼包。",
+      "和家里人总体还可以，但我有时候不太愿意主动表达。和同学相处还行，不过压力大的时候会想自己待着。",
+      "我偏内向一点，熟悉以后会好很多，但在陌生人面前通常比较安静。",
+      "最近两周心情不算稳定，有几天会比较低落，也有几天只是觉得累和空。",
+      "对现在的学习兴趣比以前低一些，很多任务还是会做，但主动投入感没有那么强。",
+      "有时候会责备自己，觉得事情没做好会影响别人，尤其项目进度慢的时候会想是不是自己拖累了团队。",
+      "前段时间压力大的时候会觉得脑子转得慢，说话和做事都慢半拍，别人问我问题时反应也会迟一些。",
+      "我会经常紧张，尤其担心任务做不好或者别人评价我，有时候晚上也会反复想这些事。",
+      "偶尔也会有一两天精力特别旺盛，想做很多事情，睡得少一点也不觉得累。",
+      "有过连续几天比较烦躁的时候，容易因为小事顶嘴，语气会比较冲，但没有到动手的程度。",
+      "有时我一紧张或者兴奋就会说得特别快，自己停不下来，别人会提醒我慢一点。",
+      "偶尔会觉得脑子特别活跃，想法很多，感觉思路一下子全打开了，但持续时间通常不长。"
     ];
 
     const statusDot = document.getElementById("status-dot");
@@ -605,9 +658,9 @@
     const clearBtn = document.getElementById("clear-btn");
     const demoBtn = document.getElementById("demo-btn");
     const resetBtn = document.getElementById("reset-btn");
-    const pauseBanner = document.getElementById("pause-banner");
     const feed = document.getElementById("feed");
     const questionListNode = document.getElementById("question-list");
+    const reviewPanel = document.getElementById("review-panel");
     const statCompleted = document.getElementById("stat-completed");
     const statRisk = document.getElementById("stat-risk");
     const statPositive = document.getElementById("stat-positive");
@@ -617,12 +670,9 @@
     let currentIndex = 0;
     let responses = [];
     let turnResults = [];
+    let inspectedIndex = null;
     let busy = false;
     let autoDemoRunning = false;
-
-    function sleep(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
 
     function escapeHtml(text) {
       return String(text)
@@ -687,13 +737,15 @@
 
     function zhClassification(value) {
       return {
-        normal: "正常",
-        mild_depression: "轻度抑郁",
-        moderate_depression: "中度抑郁",
-        moderately_severe_depression: "中重度抑郁",
-        severe_depression: "重度抑郁",
-        uncertain: "不确定"
+        depression: "抑郁",
+        bipolar: "双相",
+        anxiety: "焦虑",
+        healthy: "健康"
       }[value] || value;
+    }
+
+    function formatClassification(values) {
+      return (values || []).map(zhClassification).join(" + ");
     }
 
     function updateStats() {
@@ -704,7 +756,7 @@
     }
 
     function updateProgress() {
-      const total = questions.length || 16;
+      const total = questions.length || 14;
       const completed = responses.length;
       const percent = Math.round((completed / total) * 100);
       progressText.textContent = `第 ${Math.min(currentIndex + 1, total)} / ${total} 题`;
@@ -714,23 +766,57 @@
       renderQuestionList();
     }
 
+    function isNearBottom(node) {
+      return node.scrollHeight - node.scrollTop - node.clientHeight < 24;
+    }
+
     function renderQuestionList() {
-      questionListNode.innerHTML = questions.map((question, index) => {
-        const cls = index < responses.length ? "question-item done" : index === currentIndex ? "question-item current" : "question-item";
+      const stickToBottom = isNearBottom(questionListNode);
+      const visibleQuestions = questions.slice(0, Math.min(currentIndex + 1, questions.length));
+      questionListNode.innerHTML = visibleQuestions.map((question, index) => {
+        const states = ["question-item"];
+        if (index < responses.length) states.push("done");
+        if (index === currentIndex) states.push("current");
+        if (index === inspectedIndex) states.push("inspected");
         return `
-          <div class="${cls}">
+          <button class="${states.join(" ")}" type="button" data-index="${index}">
             <div class="question-item-index">第 ${question.question_id} 题</div>
             <div class="question-item-text">${escapeHtml(question.question_text)}</div>
-          </div>
+          </button>
         `;
       }).join("");
+      if (stickToBottom) {
+        questionListNode.scrollTop = questionListNode.scrollHeight;
+      }
+    }
+
+    function renderReviewPanel() {
+      if (inspectedIndex == null || inspectedIndex >= responses.length) {
+        reviewPanel.innerHTML = `
+          <h3>当前还没有可回看的回答</h3>
+          <div class="review-block">完成题目后，点击左侧目录中的已完成问题，可以查看当时的回答和分析结果。</div>
+        `;
+        return;
+      }
+
+      const question = questions[inspectedIndex];
+      const response = responses[inspectedIndex];
+      const result = turnResults[inspectedIndex];
+      reviewPanel.innerHTML = `
+        <h3>第 ${question.question_id} 题</h3>
+        <div class="review-block"><strong>题目：</strong>${escapeHtml(question.question_text)}</div>
+        <div class="review-block"><strong>回答：</strong>${escapeHtml(response.answer)}</div>
+        <div class="review-block"><strong>症状线索：</strong>${escapeHtml(result?.symptom || "暂无")}</div>
+        <div class="review-block"><strong>结果概览：</strong>${escapeHtml(result ? `${zhPolarity(result.polarity)} / ${zhSeverity(result.severity)}` : "暂无")}</div>
+        <div class="review-block"><strong>解释：</strong>${escapeHtml(result?.explanation || "暂无")}</div>
+      `;
     }
 
     function renderQuestion() {
       const question = questions[currentIndex];
       if (!question) {
         questionIndexNode.textContent = "已完成";
-        questionTextNode.textContent = "16 轮访谈已完成，等待查看最终汇总结果。";
+        questionTextNode.textContent = "本轮访谈已完成，等待查看最终汇总结果。";
         answerInput.disabled = true;
         submitBtn.disabled = true;
         return;
@@ -792,7 +878,7 @@
         <div class="summary-hero">
           <div>
             <div class="result-label">最终整场总结</div>
-            <h3 style="margin:0 0 10px;">${escapeHtml(zhClassification(result.depression_classification))}</h3>
+            <h3 style="margin:0 0 10px;">${escapeHtml(formatClassification(result.session_classification))}</h3>
             <div>${escapeHtml(result.summary)}</div>
           </div>
           <div class="summary-score">
@@ -833,6 +919,7 @@
       currentIndex = 0;
       responses = [];
       turnResults = [];
+      inspectedIndex = null;
       busy = false;
       autoDemoRunning = false;
       answerInput.disabled = false;
@@ -840,16 +927,16 @@
       feed.innerHTML = `
         <div class="result-card">
           <div class="result-label">已就绪</div>
-          <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的抑郁分类总结。</div>
+          <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的分类总结。</div>
         </div>
       `;
-      pauseBanner.hidden = true;
       submitBtn.disabled = false;
       clearBtn.disabled = false;
       demoBtn.disabled = false;
       resetBtn.disabled = false;
       renderQuestion();
       updateStats();
+      renderReviewPanel();
     }
 
     async function analyzeSingleAnswer(answer) {
@@ -868,9 +955,11 @@
       }
       responses.push({ question_id: question.question_id, answer });
       appendTurnResult(payload);
+      inspectedIndex = currentIndex;
       currentIndex += 1;
       answerInput.value = "";
       updateProgress();
+      renderReviewPanel();
     }
 
     async function analyzeCurrentTurn() {
@@ -887,16 +976,10 @@
         await analyzeSingleAnswer(answer);
 
         if (responses.length >= questions.length) {
-          appendSystemCard("整场总结", "16 个问题已完成，正在调用整场汇总分析。");
+          appendSystemCard("整场总结", "全部问题已完成，正在调用整场汇总分析。");
           await analyzeSession();
           renderQuestion();
           return;
-        }
-
-        if (responses.length % 2 === 0) {
-          pauseBanner.hidden = false;
-          await sleep(1200);
-          pauseBanner.hidden = true;
         }
 
         renderQuestion();
@@ -934,7 +1017,7 @@
       resetInterviewState();
       autoDemoRunning = true;
       updateStats();
-      appendSystemCard("自动演示", "正在使用预置回答自动跑完整个 16 轮流程。");
+      appendSystemCard("自动演示", "正在使用预置回答自动跑完整个 14 轮流程。");
       submitBtn.disabled = true;
       clearBtn.disabled = true;
       demoBtn.disabled = true;
@@ -944,19 +1027,12 @@
         for (let i = 0; i < questions.length; i += 1) {
           const answer = DEMO_ANSWERS[i] || "暂时没有额外回答。";
           answerInput.value = answer;
-          await sleep(300);
           await analyzeSingleAnswer(answer);
-
-          if (responses.length < questions.length && responses.length % 2 === 0) {
-            pauseBanner.hidden = false;
-            await sleep(1200);
-            pauseBanner.hidden = true;
-          }
 
           renderQuestion();
         }
 
-        appendSystemCard("整场总结", "16 个问题已完成，正在调用整场汇总分析。");
+        appendSystemCard("整场总结", "全部问题已完成，正在调用整场汇总分析。");
         await analyzeSession();
         renderQuestion();
         appendSystemCard("自动演示", "自动演示已完成。你可以点击“重置本轮访谈”重新开始。");
@@ -1004,6 +1080,13 @@
     });
     demoBtn.addEventListener("click", runAutoDemo);
     resetBtn.addEventListener("click", resetInterviewState);
+    questionListNode.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-index]");
+      if (!button) return;
+      inspectedIndex = Number(button.dataset.index);
+      renderQuestionList();
+      renderReviewPanel();
+    });
     answerInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();

@@ -8,7 +8,7 @@ from app.interview_questions import INTERVIEW_QUESTIONS, QUESTION_INDEX
 from app.pipeline import analyze_session, analyze_turn
 from app.schemas import HealthResponse, SessionAnalysis, SessionInput, TurnAnalysis, TurnInput
 
-app = FastAPI(title="Depression Interview Demo", version="0.1.0")
+app = FastAPI(title="Mental Interview Demo", version="0.1.0")
 static_dir = Path(__file__).parent / "static"
 
 # 前端页面和后端 API 复用同一个 FastAPI 服务，便于本地直接演示。
@@ -17,6 +17,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 @app.get("/")
 def index():
+    # 直接返回静态页入口，不额外引入模板层。
     return FileResponse(static_dir / "index.html")
 
 
@@ -27,6 +28,7 @@ def health_check():
 
 @app.get("/api/questions")
 def get_questions():
+    # 问题列表是固定配置，前端按此顺序驱动整场访谈。
     return INTERVIEW_QUESTIONS
 
 

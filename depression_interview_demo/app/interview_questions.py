@@ -1,24 +1,24 @@
 from app.schemas import InterviewQuestion
 
 
+# 固定访谈题库集中定义，前后端都以 question_id 为稳定主键。
 INTERVIEW_QUESTIONS = [
-    InterviewQuestion(question_id=1, question_text="过去两周，你是否经常感到情绪低落、沮丧或者绝望？"),
-    InterviewQuestion(question_id=2, question_text="过去两周，你是否对平时感兴趣的事情失去了兴趣或愉快感？"),
-    InterviewQuestion(question_id=3, question_text="最近你的睡眠情况怎么样，比如失眠、早醒或睡得过多？"),
-    InterviewQuestion(question_id=4, question_text="最近你的食欲或体重有没有明显变化？"),
-    InterviewQuestion(question_id=5, question_text="最近你是否常常感到疲劳、没精力或做什么都很吃力？"),
-    InterviewQuestion(question_id=6, question_text="最近你是否觉得自己很失败，或者让自己和家人失望？"),
-    InterviewQuestion(question_id=7, question_text="最近你在注意力集中、看书、工作或做决定时是否变得困难？"),
-    InterviewQuestion(question_id=8, question_text="最近你的动作或说话速度是否明显变慢，或者相反变得烦躁坐立不安？"),
-    InterviewQuestion(question_id=9, question_text="最近你是否有过“活着没意思”、伤害自己或不如死了的想法？"),
-    InterviewQuestion(question_id=10, question_text="最近这些情绪或状态对你的学习、工作或社交影响大吗？"),
-    InterviewQuestion(question_id=11, question_text="这些状态一般从什么时候开始的？"),
-    InterviewQuestion(question_id=12, question_text="在这一段时间里，这些感受是偶尔出现，还是经常出现？"),
-    InterviewQuestion(question_id=13, question_text="当这些感受出现时，通常会持续多久？"),
-    InterviewQuestion(question_id=14, question_text="你觉得这些问题的严重程度更接近轻微、中等还是严重？"),
-    InterviewQuestion(question_id=15, question_text="最近有没有什么支持因素，让你感觉稍微好一点？"),
-    InterviewQuestion(question_id=16, question_text="你是否愿意继续寻求帮助，比如和家人、朋友或专业人员沟通？"),
+    InterviewQuestion(question_id=1, question_text="你今天过得怎么样？"),
+    InterviewQuestion(question_id=2, question_text="你的家乡是哪里的？"),
+    InterviewQuestion(question_id=3, question_text="你最喜欢你家乡的哪些美食景点呐？"),
+    InterviewQuestion(question_id=4, question_text="你跟你的家人、同事、同学、朋友，关系处得怎么样，可以仔细说下吗？"),
+    InterviewQuestion(question_id=5, question_text="你觉得你的性格内向还是外向一些呐？"),
+    InterviewQuestion(question_id=6, question_text="最近2周，你的心情怎么样？"),
+    InterviewQuestion(question_id=7, question_text="你对你目前的学习或工作的兴趣如何呐？"),
+    InterviewQuestion(question_id=8, question_text="你容不容易责备自己，感到自己连累了其他人呐？有的话，请你仔细讲一下当时的状态。"),
+    InterviewQuestion(question_id=9, question_text="有没有哪段时间，你觉得自己的行动、思考或说话都比较迟钝？有的话，可以仔细说一下吗？"),
+    InterviewQuestion(question_id=10, question_text="你是否经常感到紧张、焦虑，担心，惶恐不安？如果是，可以仔细说一下吗？"),
+    InterviewQuestion(question_id=11, question_text="有没有哪段时间，你感到兴奋或亢奋、或者精力旺盛？有的话，请你仔细讲一下当时的状态。"),
+    InterviewQuestion(question_id=12, question_text="有没有哪段时间，连续几天持续地感到烦躁易怒，以至于与人争论，吵架或打架，或者对着外人大吼？有的话，请你仔细讲一下。"),
+    InterviewQuestion(question_id=13, question_text="有没有哪段时间，你总喜欢滔滔不绝地讲话，说话快得让人难以理解？有的话，请你仔细讲一下。"),
+    InterviewQuestion(question_id=14, question_text="好的。有没有哪段时间，你觉得自己思维比以往格外活跃，脑子格外聪明？有的话，请你仔细讲一下。"),
 ]
 
 
+# 预先建立索引，避免在主流程中频繁线性查找题目。
 QUESTION_INDEX = {item.question_id: item for item in INTERVIEW_QUESTIONS}

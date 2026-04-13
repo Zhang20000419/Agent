@@ -1,5 +1,4 @@
 import json
-import os
 import re
 from functools import lru_cache
 
@@ -33,6 +32,7 @@ def get_review_decision_parser():
 
 
 def _extract_content(response) -> str:
+    # 兼容不同 LangChain 模型返回的 content 形态：纯字符串或富文本块列表。
     content = response.content
     if isinstance(content, str):
         return content
@@ -48,6 +48,7 @@ def _extract_content(response) -> str:
 
 
 def _clean_json_text(text: str) -> str:
+    # 清理模型常见输出噪声，提升二次 JSON 解析成功率。
     text = text.strip()
     if text.startswith("```"):
         text = re.sub(r"^```(?:json)?\s*", "", text)
@@ -57,6 +58,7 @@ def _clean_json_text(text: str) -> str:
 
 
 def _detect_language(text: str) -> str:
+    # 输出语言跟随输入语言，减少中英混杂。
     chinese_count = len(re.findall(r"[\u4e00-\u9fff]", text))
     latin_count = len(re.findall(r"[A-Za-z]", text))
     if chinese_count >= latin_count:
@@ -68,6 +70,61 @@ def _language_instruction(language: str) -> str:
     if language == "en":
         return "输出语言要求：英文。所有可读文本字段必须使用英文。"
     return "输出语言要求：中文。所有可读文本字段必须使用中文。"
+
+
+def _enum_text_map(language: str) -> dict[str, str]:
+    if language != "zh":
+        return {}
+    return {
+        "less_than_2_weeks": "少于两周",
+        "2_to_4_weeks": "两到四周",
+        "1_to_3_months": "一到三个月",
+        "more_than_3_months": "三个月以上",
+        "almost_every_day": "几乎每天",
+        "sometimes": "有时",
+        "often": "经常",
+        "rare": "很少",
+        "unclear": "不明确",
+        "none": "无",
+        "mild": "轻度",
+        "moderate": "中度",
+        "severe": "重度",
+        "support": "支持症状存在",
+        "deny": "否定症状存在",
+        "uncertain": "信息不足",
+        "depression": "抑郁",
+        "bipolar": "双相",
+        "anxiety": "焦虑",
+        "healthy": "健康",
+        "overall_risk": "整体风险",
+        "session_classification": "访谈分类",
+        "question_id": "题号",
+        "question_text": "题目文本",
+        "duration": "持续时间",
+        "duration_text": "持续时间说明",
+        "frequency": "频率",
+        "frequency_text": "频率说明",
+        "severity": "严重程度",
+        "polarity": "极性",
+        "confidence": "置信度",
+        "evidence": "证据",
+        "explanation": "解释说明",
+        "review_notes": "复核说明",
+        "risk_flag": "风险标记",
+    }
+
+
+def _localize_text(text: str, language: str) -> str:
+    if language != "zh" or not text:
+        return text
+    localized = text
+    for source, target in sorted(_enum_text_map(language).items(), key=lambda item: len(item[0]), reverse=True):
+        localized = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(source)}(?![A-Za-z0-9_])", target, localized)
+    return localized.strip()
+
+
+def _localize_text_list(items: list[str], language: str) -> list[str]:
+    return [_localize_text(item.strip(), language) for item in items if item and item.strip()]
 
 
 def _normalize_payload(payload: dict) -> dict:
@@ -103,6 +160,7 @@ def _normalize_payload(payload: dict) -> dict:
 
 
 def _normalize_duration_from_text(duration_text: str, duration_value: str) -> str:
+    # 如果模型给出的枚举与文本片段不一致，以文本证据为准做保守纠偏。
     text = duration_text.strip().lower()
     if not text:
         return duration_value
@@ -150,206 +208,9 @@ def _invoke_structured(prompt: str, parser):
         return parser.pydantic_object.model_validate(payload)
 
 
-def _extract_evidence(answer: str) -> list[str]:
-    parts = [item.strip() for item in re.split(r"[，。；;、\n]", answer) if item.strip()]
-    if not parts:
-        return []
-    return parts[:3]
-
-
-def _guess_duration(answer: str) -> tuple[str, str]:
-    patterns = [
-        (r"(一天|1天|两天|2天|几天|数天)", "less_than_2_weeks"),
-        (r"(一周|1周|两周|2周|十天|10天|十二天|12天)", "less_than_2_weeks"),
-        (r"(三周|3周|四周|4周|一个月内|近一个月)", "2_to_4_weeks"),
-        (r"(一个月|1个月|两个月|2个月|三个月内|3个月内)", "1_to_3_months"),
-        (r"(三个月以上|3个月以上|半年|几个月|数月|长期)", "more_than_3_months"),
-    ]
-    for pattern, label in patterns:
-        match = re.search(pattern, answer)
-        if match:
-            return label, match.group(0)
-    return "unclear", "不明确"
-
-
-def _guess_frequency(answer: str) -> tuple[str, str]:
-    patterns = [
-        (r"(没有|无|从不)", "none"),
-        (r"(偶尔|很少|少数时候)", "rare"),
-        (r"(有时|有时候|有一些时候)", "sometimes"),
-        (r"(经常|常常|多数时候)", "often"),
-        (r"(每天|每日|几乎每天|天天)", "almost_every_day"),
-    ]
-    for pattern, label in patterns:
-        match = re.search(pattern, answer)
-        if match:
-            return label, match.group(0)
-    return "unclear", "不明确"
-
-
-def _guess_polarity(answer: str) -> str:
-    deny_patterns = r"(没有|没什么|并不|不会|不太会|从不|无明显|不是)"
-    support_patterns = r"(情绪低落|沮丧|绝望|没兴趣|失眠|早醒|疲劳|失败|注意力|烦躁|活着没意思|伤害自己|不如死了|压抑|提不起精神)"
-    if re.search(deny_patterns, answer):
-        if re.search(support_patterns, answer):
-            return "uncertain"
-        return "deny"
-    if re.search(support_patterns, answer):
-        return "support"
-    return "uncertain"
-
-
-def _guess_severity(answer: str, polarity: str, frequency: str, question_id: int) -> str:
-    if polarity == "deny":
-        return "none"
-    if re.search(r"(严重|非常严重|特别严重|无法工作|无法学习|完全做不了)", answer):
-        return "severe"
-    if question_id == 14:
-        if "严重" in answer:
-            return "severe"
-        if "中等" in answer:
-            return "moderate"
-        if "轻微" in answer:
-            return "mild"
-    if frequency == "almost_every_day":
-        return "moderate"
-    if frequency in {"often", "sometimes"}:
-        return "mild"
-    if polarity == "support":
-        return "mild"
-    return "none"
-
-
-def _symptom_for_question(question_id: int) -> str:
-    symptom_map = {
-        1: "情绪低落",
-        2: "兴趣减退",
-        3: "睡眠问题",
-        4: "食欲或体重变化",
-        5: "疲劳乏力",
-        6: "自责或无价值感",
-        7: "注意力困难",
-        8: "精神运动改变或烦躁",
-        9: "自伤或轻生想法",
-        10: "功能受损",
-        11: "起病时间",
-        12: "出现频率",
-        13: "持续时长",
-        14: "主观严重程度",
-        15: "支持因素",
-        16: "求助意愿",
-    }
-    return symptom_map.get(question_id, "访谈症状线索")
-
-
-def _fallback_turn_analysis(question_id: int, answer: str) -> TurnAnalysis:
-    question = QUESTION_INDEX[question_id]
-    duration, duration_text = _guess_duration(answer)
-    frequency, frequency_text = _guess_frequency(answer)
-    polarity = _guess_polarity(answer)
-    severity = _guess_severity(answer, polarity, frequency, question_id)
-    evidence = _extract_evidence(answer)
-    symptom = _symptom_for_question(question_id)
-
-    if question_id == 9 and polarity == "support":
-        risk_flag = True
-        severity = "severe" if severity in {"mild", "moderate"} else severity
-    else:
-        risk_flag = polarity == "support" and severity in {"moderate", "severe"}
-
-    confidence = 0.78 if evidence else 0.45
-    if polarity == "uncertain":
-        confidence = min(confidence, 0.5)
-    if polarity == "deny":
-        confidence = max(confidence, 0.7)
-
-    explanation = (
-        f"该结果依据受试者回答中的证据进行保守判断。"
-        f"症状线索为“{symptom}”，极性判断为“{polarity}”，"
-        f"持续时间参考“{duration_text}”，频率参考“{frequency_text}”。"
-    )
-    review_notes = "当前结果由本地保守规则生成，用于保证接口稳定返回；未引入回答之外的信息。"
-
-    turn = TurnAnalysis(
-        question_id=question.question_id,
-        question_text=question.question_text,
-        answer=answer,
-        symptom=symptom,
-        duration=duration,
-        duration_text=duration_text,
-        frequency=frequency,
-        frequency_text=frequency_text,
-        severity=severity,
-        polarity=polarity,
-        confidence=confidence,
-        evidence=evidence,
-        explanation=explanation,
-        review_notes=review_notes,
-        risk_flag=risk_flag,
-        review_passed=True,
-        retry_count=0,
-        review_issues=[],
-    )
-    return _normalize_turn_analysis(turn)
-
-
-def _fallback_session_analysis(session_id: str, turns: list[TurnAnalysis]) -> SessionAnalysis:
-    support_turns = [turn for turn in turns if turn.polarity == "support"]
-    high_risk_turns = [turn for turn in turns if turn.risk_flag]
-    severe_count = sum(1 for turn in turns if turn.severity == "severe")
-    moderate_count = sum(1 for turn in turns if turn.severity == "moderate")
-
-    if any(turn.question_id == 9 and turn.risk_flag for turn in turns):
-        depression_classification = "severe_depression"
-        overall_risk = "high"
-    elif severe_count >= 2 or moderate_count >= 5:
-        depression_classification = "moderately_severe_depression"
-        overall_risk = "high"
-    elif moderate_count >= 3:
-        depression_classification = "moderate_depression"
-        overall_risk = "medium"
-    elif len(support_turns) >= 2:
-        depression_classification = "mild_depression"
-        overall_risk = "medium"
-    elif support_turns:
-        depression_classification = "uncertain"
-        overall_risk = "low"
-    else:
-        depression_classification = "normal"
-        overall_risk = "low"
-
-    symptom_summary = [turn.symptom for turn in support_turns[:6]]
-    key_findings = [f"第{turn.question_id}题提示{turn.symptom}。" for turn in support_turns[:5]]
-    missing_information = []
-    if any(turn.duration == "unclear" for turn in turns):
-        missing_information.append("部分回答未能明确持续时间。")
-    if any(turn.frequency == "unclear" for turn in turns):
-        missing_information.append("部分回答未能明确出现频率。")
-    if not missing_information:
-        missing_information.append("当前 16 题信息基本完整，但仍不能替代正式临床评估。")
-
-    explanation = (
-        f"整场结果基于 {len(turns)} 轮回答的保守规则汇总。"
-        f"支持性症状线索共 {len(support_turns)} 题，高风险线索共 {len(high_risk_turns)} 题。"
-        "该结果用于演示和分层参考，不构成临床诊断。"
-    )
-
-    return SessionAnalysis(
-        session_id=session_id,
-        turns=turns,
-        overall_risk=overall_risk,
-        depression_classification=depression_classification,
-        overall_confidence=0.72 if support_turns else 0.6,
-        summary=f"本次访谈的保守汇总结果为 {depression_classification}，风险等级为 {overall_risk}。",
-        symptom_summary=symptom_summary or ["当前未形成稳定的阳性症状总结。"],
-        key_findings=key_findings or ["当前未发现稳定的高支持度症状证据。"],
-        missing_information=missing_information,
-        explanation=explanation,
-    )
-
-
 def _normalize_turn_analysis(turn: TurnAnalysis) -> TurnAnalysis:
     # 在 reviewer 返回之后做最后一层保守归一化，避免文本描述与枚举字段互相矛盾。
+    language = _detect_language(f"{turn.answer}\n{turn.question_text}")
     turn.evidence = [item.strip() for item in turn.evidence if item and item.strip()]
     turn.explanation = turn.explanation.strip()
     turn.review_notes = turn.review_notes.strip()
@@ -396,12 +257,33 @@ def _normalize_turn_analysis(turn: TurnAnalysis) -> TurnAnalysis:
     if not turn.explanation:
         turn.explanation = "当前模型没有给出充分的可解释说明，因此该结果应谨慎使用。"
 
+    turn.duration_text = _localize_text(turn.duration_text, language)
+    turn.frequency_text = _localize_text(turn.frequency_text, language)
+    turn.evidence = _localize_text_list(turn.evidence, language)
+    turn.explanation = _localize_text(turn.explanation, language)
+    turn.review_notes = _localize_text(turn.review_notes, language)
+    turn.review_issues = _localize_text_list(turn.review_issues, language)
     turn.retry_count = max(0, turn.retry_count)
     turn.confidence = max(0.0, min(1.0, turn.confidence))
     return turn
 
 
+def _normalize_session_analysis(session: SessionAnalysis) -> SessionAnalysis:
+    language = _detect_language(
+        "\n".join([turn.answer for turn in session.turns] + [session.summary, session.explanation])
+    )
+    session.summary = _localize_text(session.summary, language)
+    session.explanation = _localize_text(session.explanation, language)
+    session.symptom_summary = _localize_text_list(session.symptom_summary, language)
+    session.key_findings = _localize_text_list(session.key_findings, language)
+    session.missing_information = _localize_text_list(session.missing_information, language)
+    if not session.session_classification:
+        session.session_classification = ["healthy"]
+    return session
+
+
 def _review_decision(question_id: int, question_text: str, answer: str, candidate: TurnAnalysis, language: str) -> ReviewDecision:
+    # 把“是否通过复核”的判断独立成单独一步，避免 reviewer 一边改结果一边给自己放行。
     parser = get_review_decision_parser()
     prompt = (
         f"{REVIEW_DECISION_SYSTEM_PROMPT}\n\n"
@@ -415,24 +297,7 @@ def _review_decision(question_id: int, question_text: str, answer: str, candidat
     return _invoke_structured(prompt, parser)
 
 
-def _build_session_qa_pairs(responses: list[dict]) -> list[dict]:
-    pairs = []
-    for item in responses:
-        question = QUESTION_INDEX[item["question_id"]]
-        pairs.append(
-            {
-                "question_id": question.question_id,
-                "question_text": question.question_text,
-                "answer": item["answer"],
-            }
-        )
-    return pairs
-
-
 def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
-    if os.getenv("USE_MODEL_TURN_ANALYSIS", "true").strip().lower() != "true":
-        return _fallback_turn_analysis(question_id, answer)
-
     question = QUESTION_INDEX[question_id]
     language = _detect_language(answer or question.question_text)
     turn_parser = get_turn_parser()
@@ -456,9 +321,7 @@ def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
         try:
             draft = _invoke_structured(extractor_prompt, turn_parser)
         except Exception:
-            if os.getenv("ENABLE_LOCAL_FALLBACK", "false").strip().lower() != "true":
-                raise
-            return _fallback_turn_analysis(question_id, answer)
+            raise
 
         reviewer_prompt = (
             f"{REVIEWER_SYSTEM_PROMPT}\n\n"
@@ -472,9 +335,7 @@ def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
         try:
             reviewed = _invoke_structured(reviewer_prompt, turn_parser)
         except Exception:
-            if os.getenv("ENABLE_LOCAL_FALLBACK", "false").strip().lower() != "true":
-                raise
-            return _fallback_turn_analysis(question_id, answer)
+            raise
         reviewed.question_id = question.question_id
         reviewed.question_text = question.question_text
         reviewed.answer = answer
@@ -490,9 +351,7 @@ def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
                 language=language,
             )
         except Exception:
-            if os.getenv("ENABLE_LOCAL_FALLBACK", "false").strip().lower() != "true":
-                raise
-            return _fallback_turn_analysis(question_id, answer)
+            raise
         if decision.passed:
             reviewed.review_passed = True
             reviewed.retry_count = attempt
@@ -500,8 +359,8 @@ def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
             if attempt > 0:
                 note = reviewed.review_notes.strip()
                 reviewed.review_notes = f"{note} 已通过第{attempt + 1}轮复核。".strip()
-            return reviewed
-        collected_issues.extend(decision.issues)
+            return _normalize_turn_analysis(reviewed)
+        collected_issues.extend(_localize_text_list(decision.issues, language))
         retry_guidance = decision.guidance_for_retry or "请严格依据原回答修正无依据字段，并降低过度推断。"
 
     assert last_reviewed is not None
@@ -513,12 +372,9 @@ def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
 
 
 def analyze_session(session_id: str, responses: list[dict]) -> SessionAnalysis:
-    # 整场总结的输入不是原始问答，而是 16 轮单题分析后的结构化 turns。
+    # 整场总结的输入不是原始问答，而是逐题分析后的结构化 turns。
     # 也就是“先逐题 agent 分析，再把全部分析结果一次性交给总结代理”。
     turns = [analyze_turn(item["question_id"], item["answer"]) for item in responses]
-    if os.getenv("USE_MODEL_SESSION_SUMMARY", "true").strip().lower() != "true":
-        return _fallback_session_analysis(session_id, turns)
-
     language = _detect_language(" ".join(item["answer"] for item in responses if item.get("answer")))
     session_parser = get_session_parser()
     summarizer_prompt = (
@@ -528,21 +384,16 @@ def analyze_session(session_id: str, responses: list[dict]) -> SessionAnalysis:
         f"session_id: {session_id}\n"
         f"turns: {json.dumps([turn.model_dump(mode='json') for turn in turns], ensure_ascii=False)}\n"
     )
-    try:
-        summary = _invoke_structured(summarizer_prompt, session_parser)
-        return SessionAnalysis(
-            session_id=session_id,
-            turns=turns,
-            overall_risk=summary.overall_risk,
-            depression_classification=summary.depression_classification,
-            overall_confidence=summary.overall_confidence,
-            summary=summary.summary,
-            symptom_summary=summary.symptom_summary,
-            key_findings=summary.key_findings,
-            missing_information=summary.missing_information,
-            explanation=summary.explanation,
-        )
-    except Exception:
-        if os.getenv("ENABLE_LOCAL_FALLBACK", "false").strip().lower() != "true":
-            raise
-        return _fallback_session_analysis(session_id, turns)
+    summary = _invoke_structured(summarizer_prompt, session_parser)
+    return _normalize_session_analysis(SessionAnalysis(
+        session_id=session_id,
+        turns=turns,
+        overall_risk=summary.overall_risk,
+        session_classification=summary.session_classification,
+        overall_confidence=summary.overall_confidence,
+        summary=summary.summary,
+        symptom_summary=summary.symptom_summary,
+        key_findings=summary.key_findings,
+        missing_information=summary.missing_information,
+        explanation=summary.explanation,
+    ))

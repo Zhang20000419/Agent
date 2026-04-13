@@ -3,18 +3,17 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+# 这些 Literal 约束既是后端校验，也是提示词里要求模型遵守的目标枚举。
 Severity = Literal["none", "mild", "moderate", "severe"]
 Polarity = Literal["support", "deny", "uncertain"]
 OverallRisk = Literal["low", "medium", "high"]
 DurationLabel = Literal["none", "less_than_2_weeks", "2_to_4_weeks", "1_to_3_months", "more_than_3_months", "unclear"]
 FrequencyLabel = Literal["none", "rare", "sometimes", "often", "almost_every_day", "unclear"]
-DepressionClassification = Literal[
-    "normal",
-    "mild_depression",
-    "moderate_depression",
-    "moderately_severe_depression",
-    "severe_depression",
-    "uncertain",
+SessionClassification = Literal[
+    "depression",
+    "bipolar",
+    "anxiety",
+    "healthy",
 ]
 
 
@@ -29,6 +28,7 @@ class TurnInput(BaseModel):
 
 
 class TurnAnalysis(BaseModel):
+    # 单题输出需要同时兼顾“可机器消费”和“可解释展示”。
     question_id: int
     question_text: str
     answer: str
@@ -61,10 +61,11 @@ class SessionInput(BaseModel):
 
 
 class SessionAnalysis(BaseModel):
+    # `turns` 保留整场逐题结果，便于前端在最终总结页展示时间线。
     session_id: str
     turns: list[TurnAnalysis]
     overall_risk: OverallRisk
-    depression_classification: DepressionClassification
+    session_classification: list[SessionClassification] = Field(min_length=1)
     overall_confidence: float = Field(ge=0.0, le=1.0, description="0到1之间的小数，必须使用阿拉伯数字。")
     summary: str
     symptom_summary: list[str]
@@ -75,7 +76,7 @@ class SessionAnalysis(BaseModel):
 
 class SessionSummary(BaseModel):
     overall_risk: OverallRisk
-    depression_classification: DepressionClassification
+    session_classification: list[SessionClassification] = Field(min_length=1)
     overall_confidence: float = Field(ge=0.0, le=1.0, description="0到1之间的小数，必须使用阿拉伯数字。")
     summary: str
     symptom_summary: list[str]
