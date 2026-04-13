@@ -371,23 +371,30 @@ def analyze_turn(question_id: int, answer: str) -> TurnAnalysis:
     return _normalize_turn_analysis(last_reviewed)
 
 
-def analyze_session(session_id: str, responses: list[dict]) -> SessionAnalysis:
-    # 整场总结的输入不是原始问答，而是逐题分析后的结构化 turns。
-    # 也就是“先逐题 agent 分析，再把全部分析结果一次性交给总结代理”。
-    turns = [analyze_turn(item["question_id"], item["answer"]) for item in responses]
-    language = _detect_language(" ".join(item["answer"] for item in responses if item.get("answer")))
+def _build_turns_from_responses(responses: list[dict]) -> list[TurnAnalysis]:
+    return [analyze_turn(item["question_id"], item["answer"]) for item in responses]
+
+
+def _coerce_turns(turns: list[dict] | list[TurnAnalysis]) -> list[TurnAnalysis]:
+    return [_normalize_turn_analysis(TurnAnalysis.model_validate(turn)) for turn in turns]
+
+
+def summarize_session_from_turns(session_id: str, turns: list[dict] | list[TurnAnalysis]) -> SessionAnalysis:
+    # 整场总结只消费已经完成复核的结构化 turns，不回到原始问答重新逐题抽取。
+    normalized_turns = _coerce_turns(turns)
+    language = _detect_language(" ".join(turn.answer for turn in normalized_turns if turn.answer))
     session_parser = get_session_parser()
     summarizer_prompt = (
         f"{SUMMARIZER_SYSTEM_PROMPT}\n\n"
         f"{_language_instruction(language)}\n\n"
         f"{session_parser.get_format_instructions()}\n\n"
         f"session_id: {session_id}\n"
-        f"turns: {json.dumps([turn.model_dump(mode='json') for turn in turns], ensure_ascii=False)}\n"
+        f"turns: {json.dumps([turn.model_dump(mode='json') for turn in normalized_turns], ensure_ascii=False)}\n"
     )
     summary = _invoke_structured(summarizer_prompt, session_parser)
     return _normalize_session_analysis(SessionAnalysis(
         session_id=session_id,
-        turns=turns,
+        turns=normalized_turns,
         overall_risk=summary.overall_risk,
         session_classification=summary.session_classification,
         overall_confidence=summary.overall_confidence,
@@ -397,3 +404,16 @@ def analyze_session(session_id: str, responses: list[dict]) -> SessionAnalysis:
         missing_information=summary.missing_information,
         explanation=summary.explanation,
     ))
+
+
+def analyze_session(
+    session_id: str,
+    responses: list[dict] | None = None,
+    turns: list[dict] | list[TurnAnalysis] | None = None,
+) -> SessionAnalysis:
+    # 优先复用前面逐题分析得到的结构化 turns；仅在兼容路径下才从 responses 补跑单题分析。
+    if turns:
+        return summarize_session_from_turns(session_id, turns)
+    if responses:
+        return summarize_session_from_turns(session_id, _build_turns_from_responses(responses))
+    raise ValueError("turns or responses cannot both be empty")

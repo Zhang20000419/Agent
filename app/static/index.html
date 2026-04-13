@@ -3,120 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent Console</title>
+  <title>心理访谈工作台</title>
   <style>
     :root {
-      --bg: #f3ede2;
-      --bg-strong: #e8dcc8;
-      --panel: rgba(255, 250, 242, 0.82);
-      --panel-strong: rgba(255, 248, 238, 0.95);
-      --line: rgba(62, 42, 24, 0.14);
-      --text: #24170d;
-      --muted: #6f5d4c;
-      --accent: #b64d24;
-      --accent-soft: #f0b26d;
-      --shadow: 0 18px 50px rgba(62, 42, 24, 0.12);
-      --radius: 24px;
+      --bg: #ecf1f7;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-strong: #ffffff;
+      --line: rgba(20, 34, 57, 0.12);
+      --text: #132238;
+      --muted: #62758a;
+      --accent: #1d63d6;
+      --accent-soft: rgba(29, 99, 214, 0.12);
+      --good: #11875f;
+      --warn: #bb7a16;
+      --risk: #c24c4c;
+      --ink: #142239;
+      --shadow: 0 18px 48px rgba(19, 34, 56, 0.1);
+      --radius: 22px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       color: var(--text);
+      font-family: "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(182, 77, 36, 0.16), transparent 28%),
-        radial-gradient(circle at right 18%, rgba(240, 178, 109, 0.22), transparent 24%),
-        linear-gradient(135deg, #f8f1e6 0%, #efe1cc 45%, #e8dbc8 100%);
+        radial-gradient(circle at top left, rgba(29, 99, 214, 0.08), transparent 24%),
+        radial-gradient(circle at right 18%, rgba(17, 135, 95, 0.08), transparent 24%),
+        linear-gradient(180deg, #f6f8fb 0%, #ebf0f6 100%);
     }
 
     .page {
-      width: min(1120px, calc(100% - 32px));
+      width: min(1480px, calc(100% - 26px));
       margin: 0 auto;
-      padding: 32px 0 40px;
+      padding: 22px 0 38px;
     }
 
     .hero {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 20px;
-      align-items: stretch;
-      margin-bottom: 20px;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 18px;
+      margin-bottom: 18px;
     }
 
-    .hero-card,
-    .meta-card,
-    .chat-shell {
+    .card {
       border: 1px solid var(--line);
       background: var(--panel);
-      backdrop-filter: blur(18px);
-      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
       border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
 
-    .hero-card {
-      padding: 28px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero-card::after {
-      content: "";
-      position: absolute;
-      width: 180px;
-      height: 180px;
-      right: -40px;
-      bottom: -60px;
-      border-radius: 50%;
-      background: linear-gradient(180deg, rgba(182, 77, 36, 0.18), rgba(240, 178, 109, 0.02));
+    .hero-main,
+    .hero-side,
+    .panel {
+      padding: 22px;
     }
 
     .eyebrow {
       display: inline-flex;
-      align-items: center;
-      gap: 8px;
       padding: 8px 12px;
       border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
       font-size: 12px;
-      letter-spacing: 0.08em;
+      font-weight: 800;
       text-transform: uppercase;
-      color: var(--muted);
-      background: rgba(255, 255, 255, 0.5);
-      border: 1px solid rgba(62, 42, 24, 0.08);
+      letter-spacing: 0.08em;
     }
 
     h1 {
-      margin: 16px 0 12px;
-      max-width: 12ch;
-      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-      font-size: clamp(36px, 6vw, 66px);
-      line-height: 0.95;
+      margin: 16px 0 10px;
+      font-size: clamp(32px, 5vw, 58px);
+      line-height: 0.96;
       letter-spacing: -0.04em;
     }
 
-    .hero p {
+    .hero-main p {
       margin: 0;
-      max-width: 44ch;
+      max-width: 50ch;
       color: var(--muted);
-      font-size: 16px;
-      line-height: 1.7;
+      line-height: 1.78;
+      font-size: 15px;
     }
 
-    .meta-card {
-      padding: 24px;
+    .hero-side {
       display: grid;
-      gap: 14px;
+      gap: 12px;
       align-content: center;
     }
 
     .meta-row {
       display: flex;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
       padding-bottom: 12px;
       border-bottom: 1px solid var(--line);
       color: var(--muted);
@@ -129,200 +111,418 @@
     }
 
     .meta-row strong {
-      color: var(--text);
-      font-weight: 600;
+      color: var(--ink);
     }
 
-    .chat-shell {
-      padding: 18px;
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 420px 1fr;
+      gap: 18px;
+      align-items: stretch;
+      height: min(760px, calc(100vh - 220px));
     }
 
-    .toolbar {
+    .stack {
+      display: grid;
+      gap: 18px;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .layout > .stack:first-child {
+      grid-template-rows: minmax(240px, 0.82fr) minmax(280px, 1.18fr);
+      align-content: start;
+    }
+
+    .layout > .stack:nth-child(2),
+    .layout > .stack:nth-child(3) {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .stack > .card.panel {
+      height: 100%;
+      min-height: 0;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 14px;
+      flex-direction: column;
+      justify-content: flex-start;
     }
 
-    .toolbar h2 {
-      margin: 0;
+    .panel h2 {
+      margin: 0 0 14px;
       font-size: 18px;
-      font-weight: 700;
     }
 
     .status {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      color: var(--muted);
+      margin-bottom: 14px;
       font-size: 13px;
+      color: var(--muted);
     }
 
     .status-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: #d08236;
-      box-shadow: 0 0 0 6px rgba(208, 130, 54, 0.12);
-      transition: background 0.2s ease;
+      background: var(--warn);
+      box-shadow: 0 0 0 6px rgba(187, 122, 22, 0.12);
     }
 
     .status-dot.live {
-      background: #2f8f5b;
-      box-shadow: 0 0 0 6px rgba(47, 143, 91, 0.12);
+      background: var(--good);
+      box-shadow: 0 0 0 6px rgba(17, 135, 95, 0.12);
     }
 
-    .messages {
-      min-height: 420px;
-      max-height: 62vh;
-      overflow: auto;
-      padding: 10px;
-      border-radius: 20px;
-      background: var(--panel-strong);
-      border: 1px solid rgba(62, 42, 24, 0.08);
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
     }
 
-    .message {
-      max-width: 86%;
-      padding: 14px 16px;
-      margin: 10px 0;
-      border-radius: 18px;
-      line-height: 1.65;
-      white-space: pre-wrap;
-      word-break: break-word;
-      animation: rise 0.24s ease;
+    .stat-box {
+      padding: 14px;
+      border-radius: 16px;
+      background: #f6f9fc;
+      border: 1px solid rgba(20, 34, 57, 0.08);
     }
 
-    .message.user {
-      margin-left: auto;
-      color: #fff8f2;
-      background: linear-gradient(135deg, #bd5127, #d67b38);
-      border-bottom-right-radius: 6px;
-    }
-
-    .message.agent {
-      background: #fffdf8;
-      border: 1px solid rgba(62, 42, 24, 0.08);
-      border-bottom-left-radius: 6px;
-    }
-
-    .message.system {
-      max-width: 100%;
-      background: rgba(182, 77, 36, 0.08);
+    .stat-label {
       color: var(--muted);
-      border: 1px dashed rgba(182, 77, 36, 0.18);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
     }
 
-    .composer {
+    .stat-value {
+      margin-top: 6px;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .progress-wrap {
       margin-top: 14px;
-      display: grid;
-      gap: 12px;
     }
 
-    .chips {
+    .progress-header {
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .chip {
-      border: 1px solid rgba(62, 42, 24, 0.12);
-      background: rgba(255, 255, 255, 0.56);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: transform 0.16s ease, background 0.16s ease;
-    }
-
-    .chip:hover {
-      transform: translateY(-1px);
-      background: rgba(255, 255, 255, 0.9);
-    }
-
-    .input-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
+      justify-content: space-between;
       gap: 12px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #dfe7f0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #1d63d6, #65a0ff);
+      transition: width 0.25s ease;
+    }
+
+    .question-list {
+      display: grid;
+      gap: 8px;
+      flex: 1;
+      min-height: 0;
+      align-content: start;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .question-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(20, 34, 57, 0.08);
+      border-radius: 16px;
+      background: #f9fbfd;
+      padding: 12px 14px;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+      cursor: pointer;
+    }
+
+    .question-item.current {
+      border-color: rgba(29, 99, 214, 0.4);
+      background: rgba(29, 99, 214, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .question-item.done {
+      border-color: rgba(17, 135, 95, 0.24);
+      background: rgba(17, 135, 95, 0.06);
+    }
+
+    .question-item.inspected {
+      box-shadow: inset 0 0 0 1px rgba(19, 34, 56, 0.18);
+    }
+
+    .question-item-index {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .question-item-text {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .review-box {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 16px;
+      border-radius: 18px;
+      background: #f7fafc;
+      border: 1px solid rgba(20, 34, 57, 0.08);
+    }
+
+    .review-box h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .review-block {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .review-block strong {
+      color: var(--ink);
+    }
+
+    .question-box {
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #f8fbff, #f2f7fd);
+      border: 1px solid rgba(29, 99, 214, 0.12);
+    }
+
+    .question-index {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .question-text {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.65;
     }
 
     textarea {
       width: 100%;
-      min-height: 112px;
+      min-height: 160px;
+      margin-top: 14px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
       resize: vertical;
-      padding: 18px 20px;
-      border-radius: 20px;
-      border: 1px solid rgba(62, 42, 24, 0.12);
-      background: rgba(255, 252, 247, 0.9);
-      color: var(--text);
+      background: #fff;
+      color: var(--ink);
       font: inherit;
-      line-height: 1.6;
-      outline: none;
+      line-height: 1.7;
     }
 
     textarea:focus {
-      border-color: rgba(182, 77, 36, 0.5);
-      box-shadow: 0 0 0 4px rgba(182, 77, 36, 0.08);
+      outline: none;
+      border-color: rgba(29, 99, 214, 0.38);
+      box-shadow: 0 0 0 4px rgba(29, 99, 214, 0.08);
     }
 
-    button.send {
-      align-self: end;
-      min-width: 160px;
-      padding: 0 22px;
-      height: 56px;
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .actions.secondary-row {
+      grid-template-columns: 1fr 1fr;
+      margin-top: 12px;
+    }
+
+    button {
       border: 0;
-      border-radius: 18px;
-      color: #fff8f2;
-      background: linear-gradient(135deg, #1c1b19, #4a3726);
+      border-radius: 16px;
+      padding: 14px 18px;
       font: inherit;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
       transition: transform 0.18s ease, opacity 0.18s ease;
     }
 
-    button.send:hover:not(:disabled) {
+    button:hover:not(:disabled) {
       transform: translateY(-1px);
     }
 
-    button.send:disabled {
+    button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
     }
 
-    .footer-note {
+    .primary {
+      color: white;
+      background: linear-gradient(135deg, #1a57bf, #1d63d6);
+    }
+
+    .ghost {
+      color: var(--ink);
+      background: #edf3fa;
+    }
+
+    .accent {
+      color: white;
+      background: linear-gradient(135deg, #0d835a, #1da26c);
+    }
+
+    .hint {
       margin-top: 12px;
       color: var(--muted);
       font-size: 12px;
+      line-height: 1.65;
     }
 
-    @keyframes rise {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
+    .feed {
+      display: grid;
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .result-card {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel-strong);
+      padding: 18px;
+    }
+
+    .result-card.summary-card {
+      border-color: rgba(29, 99, 214, 0.18);
+      background: linear-gradient(180deg, #ffffff, #f7fbff);
+    }
+
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 10px;
+      align-items: start;
+    }
+
+    .result-top h3 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    .result-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #eef4fb;
+      color: var(--ink);
+    }
+
+    .pill.risk { background: rgba(194, 76, 76, 0.12); color: var(--risk); }
+    .pill.safe { background: rgba(17, 135, 95, 0.12); color: var(--good); }
+    .pill.warn { background: rgba(187, 122, 22, 0.12); color: var(--warn); }
+
+    .result-block { margin-top: 12px; }
+
+    .evidence-list,
+    .summary-list {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+
+    .summary-hero {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .summary-score {
+      padding: 18px;
+      border-radius: 18px;
+      background: #f0f6ff;
+      text-align: center;
+    }
+
+    .summary-score strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 1280px) {
+      .layout {
+        grid-template-columns: 280px 1fr;
+        height: auto;
       }
-      to {
-        opacity: 1;
-        transform: translateY(0);
+
+      .layout > .stack:nth-child(2) {
+        grid-column: span 1;
+      }
+
+      .layout > .stack:nth-child(3) {
+        grid-column: 1 / -1;
       }
     }
 
-    @media (max-width: 900px) {
-      .hero {
+    @media (max-width: 980px) {
+      .hero,
+      .layout {
         grid-template-columns: 1fr;
+        height: auto;
       }
 
-      .input-row {
-        grid-template-columns: 1fr;
-      }
-
-      button.send {
-        width: 100%;
-      }
-
-      .messages {
-        min-height: 360px;
+      .feed,
+      .question-list {
+        max-height: none;
       }
     }
   </style>
@@ -330,128 +530,572 @@
 <body>
   <main class="page">
     <section class="hero">
-      <article class="hero-card">
-        <span class="eyebrow">Local Agent Backend</span>
-        <h1>Chat with your backend agent.</h1>
-        <p>这是一个先行版本的前端页面，直接连接当前 FastAPI 后端。页面默认请求本地 <code>/api/chat</code>，方便你后续继续拆出独立前端工程。</p>
+      <article class="card hero-main">
+        <span class="eyebrow">高敏感访谈原型</span>
+        <h1>心理访谈工作台</h1>
+        <p>页面提供手动访谈和自动演示两种模式。每次回答都会立即显示结构化识别结果；全部问题结束后，系统会自动输出整场分类、关键线索和可解释信息。</p>
       </article>
-      <aside class="meta-card">
-        <div class="meta-row"><span>Service</span><strong>http://127.0.0.1:8080</strong></div>
-        <div class="meta-row"><span>Endpoint</span><strong>POST /api/chat</strong></div>
-        <div class="meta-row"><span>Providers</span><strong>Gemini / Zhipu</strong></div>
-        <div class="meta-row"><span>Mode</span><strong>Single-turn chat</strong></div>
+      <aside class="card hero-side">
+        <div class="meta-row"><span>服务地址</span><strong>http://127.0.0.1:8090</strong></div>
+        <div class="meta-row"><span>访谈形式</span><strong>14 轮固定问题</strong></div>
+        <div class="meta-row"><span>输出内容</span><strong>逐题结构化结果 + 整场总结</strong></div>
+        <div class="meta-row"><span>运行模式</span><strong>手动访谈 / 自动演示</strong></div>
       </aside>
     </section>
 
-    <section class="chat-shell">
-      <div class="toolbar">
-        <h2>Agent Console</h2>
-        <div class="status">
-          <span id="status-dot" class="status-dot"></span>
-          <span id="status-text">Checking service...</span>
+    <section class="layout">
+      <div class="stack">
+        <div class="card panel">
+          <h2>访谈目录</h2>
+          <div id="question-list" class="question-list"></div>
+        </div>
+        <div class="card panel">
+          <h2>历史回看</h2>
+          <div id="review-panel" class="review-box">
+            <h3>当前还没有可回看的回答</h3>
+            <div class="review-block">完成题目后，点击左侧目录中的已完成问题，可以查看当时的回答和分析结果。</div>
+          </div>
         </div>
       </div>
 
-      <div id="messages" class="messages">
-        <div class="message system">服务启动后，这里会显示对话内容。你可以先试试天气查询、简单问答，或者让模型给出一段简短建议。</div>
+      <div class="stack">
+        <div class="card panel">
+          <div class="status">
+            <span id="status-dot" class="status-dot"></span>
+            <span id="status-text">正在检查后端...</span>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-box">
+              <div class="stat-label">已完成题数</div>
+              <div id="stat-completed" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">风险标记数</div>
+              <div id="stat-risk" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">支持轮次数</div>
+              <div id="stat-positive" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">当前模式</div>
+              <div id="stat-mode" class="stat-value" style="font-size:18px;">手动</div>
+            </div>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="progress-header">
+              <span id="progress-text">第 0 / 14 题</span>
+              <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="question-box">
+            <div id="question-index" class="question-index">加载中</div>
+            <p id="question-text" class="question-text">正在加载问题...</p>
+          </div>
+
+          <textarea id="answer-input" placeholder="请输入受试者回答，或者使用自动演示模式。"></textarea>
+
+          <div class="actions">
+            <button id="submit-btn" class="primary" type="button">提交并分析</button>
+            <button id="clear-btn" class="ghost" type="button">清空输入</button>
+          </div>
+          <div class="actions secondary-row">
+            <button id="demo-btn" class="accent" type="button">自动演示 14 题</button>
+            <button id="reset-btn" class="ghost" type="button">重置本轮访谈</button>
+          </div>
+
+          <div class="hint">手动模式下使用当前输入作答；自动演示模式会使用预置的 14 条样例回答依次提交。按 <code>Ctrl/Cmd + Enter</code> 可以提交当前回答。</div>
+        </div>
       </div>
 
-      <div class="composer">
-        <div class="chips">
-          <button class="chip" type="button" data-prompt="北京天气怎么样？顺便告诉我 2 + 2 等于几。">天气 + 计算</button>
-          <button class="chip" type="button" data-prompt="请用中文列出三条学习 Python 的建议。">学习建议</button>
-          <button class="chip" type="button" data-prompt="What is the weather in beijing? Also tell me 2 + 2.">Tool test</button>
-        </div>
-
-        <div class="input-row">
-          <textarea id="input" placeholder="输入你的问题。按 Enter 发送，Shift + Enter 换行。"></textarea>
-          <button id="send" class="send" type="button">Send Request</button>
+      <div class="stack">
+        <div class="card panel">
+          <h2>分析时间线</h2>
+          <div id="feed" class="feed">
+            <div class="result-card">
+              <div class="result-label">已就绪</div>
+              <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的分类总结。</div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="footer-note">当前页面是同源调用后端接口；后续拆前端时，保持请求协议不变即可继续复用。</div>
     </section>
   </main>
 
   <script>
+    const DEMO_ANSWERS = [
+      "今天整体还行，上午上课有点累，下午跟朋友聊了会儿天，心情稍微放松一些。",
+      "我家乡在杭州，小时候一直在那边生活，后来才出来上学。",
+      "我很喜欢家乡的西湖和龙井茶，吃的方面会想念片儿川和小笼包。",
+      "和家里人总体还可以，但我有时候不太愿意主动表达。和同学相处还行，不过压力大的时候会想自己待着。",
+      "我偏内向一点，熟悉以后会好很多，但在陌生人面前通常比较安静。",
+      "最近两周心情不算稳定，有几天会比较低落，也有几天只是觉得累和空。",
+      "对现在的学习兴趣比以前低一些，很多任务还是会做，但主动投入感没有那么强。",
+      "有时候会责备自己，觉得事情没做好会影响别人，尤其项目进度慢的时候会想是不是自己拖累了团队。",
+      "前段时间压力大的时候会觉得脑子转得慢，说话和做事都慢半拍，别人问我问题时反应也会迟一些。",
+      "我会经常紧张，尤其担心任务做不好或者别人评价我，有时候晚上也会反复想这些事。",
+      "偶尔也会有一两天精力特别旺盛，想做很多事情，睡得少一点也不觉得累。",
+      "有过连续几天比较烦躁的时候，容易因为小事顶嘴，语气会比较冲，但没有到动手的程度。",
+      "有时我一紧张或者兴奋就会说得特别快，自己停不下来，别人会提醒我慢一点。",
+      "偶尔会觉得脑子特别活跃，想法很多，感觉思路一下子全打开了，但持续时间通常不长。"
+    ];
+
     const statusDot = document.getElementById("status-dot");
     const statusText = document.getElementById("status-text");
-    const messages = document.getElementById("messages");
-    const input = document.getElementById("input");
-    const send = document.getElementById("send");
-    const chips = document.querySelectorAll(".chip");
+    const progressText = document.getElementById("progress-text");
+    const progressPercent = document.getElementById("progress-percent");
+    const progressFill = document.getElementById("progress-fill");
+    const questionIndexNode = document.getElementById("question-index");
+    const questionTextNode = document.getElementById("question-text");
+    const answerInput = document.getElementById("answer-input");
+    const submitBtn = document.getElementById("submit-btn");
+    const clearBtn = document.getElementById("clear-btn");
+    const demoBtn = document.getElementById("demo-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const feed = document.getElementById("feed");
+    const questionListNode = document.getElementById("question-list");
+    const reviewPanel = document.getElementById("review-panel");
+    const statCompleted = document.getElementById("stat-completed");
+    const statRisk = document.getElementById("stat-risk");
+    const statPositive = document.getElementById("stat-positive");
+    const statMode = document.getElementById("stat-mode");
 
-    function appendMessage(role, text) {
-      const node = document.createElement("div");
-      node.className = `message ${role}`;
-      node.textContent = text;
-      messages.appendChild(node);
-      messages.scrollTop = messages.scrollHeight;
-      return node;
+    let questions = [];
+    let currentIndex = 0;
+    let responses = [];
+    let turnResults = [];
+    let inspectedIndex = null;
+    let busy = false;
+    let autoDemoRunning = false;
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
     }
 
-    async function checkHealth() {
-      try {
-        const response = await fetch("/health");
-        if (!response.ok) throw new Error("health check failed");
-        statusDot.classList.add("live");
-        statusText.textContent = "Service ready on :8080";
-      } catch (error) {
-        statusDot.classList.remove("live");
-        statusText.textContent = "Service unavailable";
+    function setStatus(ok, text) {
+      statusText.textContent = text;
+      statusDot.classList.toggle("live", ok);
+    }
+
+    function zhDuration(value) {
+      return {
+        none: "无",
+        less_than_2_weeks: "少于2周",
+        "2_to_4_weeks": "2到4周",
+        "1_to_3_months": "1到3个月",
+        more_than_3_months: "3个月以上",
+        unclear: "不明确"
+      }[value] || value;
+    }
+
+    function zhFrequency(value) {
+      return {
+        none: "无",
+        rare: "很少",
+        sometimes: "有时",
+        often: "经常",
+        almost_every_day: "几乎每天",
+        unclear: "不明确"
+      }[value] || value;
+    }
+
+    function zhSeverity(value) {
+      return {
+        none: "无",
+        mild: "轻度",
+        moderate: "中度",
+        severe: "重度"
+      }[value] || value;
+    }
+
+    function zhPolarity(value) {
+      return {
+        support: "支持症状存在",
+        deny: "否定症状存在",
+        uncertain: "信息不足"
+      }[value] || value;
+    }
+
+    function zhOverallRisk(value) {
+      return {
+        low: "低风险",
+        medium: "中风险",
+        high: "高风险"
+      }[value] || value;
+    }
+
+    function zhClassification(value) {
+      return {
+        depression: "抑郁",
+        bipolar: "双相",
+        anxiety: "焦虑",
+        healthy: "健康"
+      }[value] || value;
+    }
+
+    function formatClassification(values) {
+      return (values || []).map(zhClassification).join(" + ");
+    }
+
+    function updateStats() {
+      statCompleted.textContent = String(responses.length);
+      statRisk.textContent = String(turnResults.filter(item => item.risk_flag).length);
+      statPositive.textContent = String(turnResults.filter(item => item.polarity === "support").length);
+      statMode.textContent = autoDemoRunning ? "自动演示" : "手动";
+    }
+
+    function updateProgress() {
+      const total = questions.length || 14;
+      const completed = responses.length;
+      const percent = Math.round((completed / total) * 100);
+      progressText.textContent = `第 ${Math.min(currentIndex + 1, total)} / ${total} 题`;
+      progressPercent.textContent = `${percent}%`;
+      progressFill.style.width = `${percent}%`;
+      updateStats();
+      renderQuestionList();
+    }
+
+    function isNearBottom(node) {
+      return node.scrollHeight - node.scrollTop - node.clientHeight < 24;
+    }
+
+    function renderQuestionList() {
+      const stickToBottom = isNearBottom(questionListNode);
+      const visibleQuestions = questions.slice(0, Math.min(currentIndex + 1, questions.length));
+      questionListNode.innerHTML = visibleQuestions.map((question, index) => {
+        const states = ["question-item"];
+        if (index < responses.length) states.push("done");
+        if (index === currentIndex) states.push("current");
+        if (index === inspectedIndex) states.push("inspected");
+        return `
+          <button class="${states.join(" ")}" type="button" data-index="${index}">
+            <div class="question-item-index">第 ${question.question_id} 题</div>
+            <div class="question-item-text">${escapeHtml(question.question_text)}</div>
+          </button>
+        `;
+      }).join("");
+      if (stickToBottom) {
+        questionListNode.scrollTop = questionListNode.scrollHeight;
       }
     }
 
-    async function submitMessage() {
-      const text = input.value.trim();
-      if (!text) return;
+    function renderReviewPanel() {
+      if (inspectedIndex == null || inspectedIndex >= responses.length) {
+        reviewPanel.innerHTML = `
+          <h3>当前还没有可回看的回答</h3>
+          <div class="review-block">完成题目后，点击左侧目录中的已完成问题，可以查看当时的回答和分析结果。</div>
+        `;
+        return;
+      }
 
-      appendMessage("user", text);
-      input.value = "";
-      send.disabled = true;
-      const pending = appendMessage("system", "Agent is thinking...");
+      const question = questions[inspectedIndex];
+      const response = responses[inspectedIndex];
+      const result = turnResults[inspectedIndex];
+      reviewPanel.innerHTML = `
+        <h3>第 ${question.question_id} 题</h3>
+        <div class="review-block"><strong>题目：</strong>${escapeHtml(question.question_text)}</div>
+        <div class="review-block"><strong>回答：</strong>${escapeHtml(response.answer)}</div>
+        <div class="review-block"><strong>症状线索：</strong>${escapeHtml(result?.symptom || "暂无")}</div>
+        <div class="review-block"><strong>结果概览：</strong>${escapeHtml(result ? `${zhPolarity(result.polarity)} / ${zhSeverity(result.severity)}` : "暂无")}</div>
+        <div class="review-block"><strong>解释：</strong>${escapeHtml(result?.explanation || "暂无")}</div>
+      `;
+    }
+
+    function renderQuestion() {
+      const question = questions[currentIndex];
+      if (!question) {
+        questionIndexNode.textContent = "已完成";
+        questionTextNode.textContent = "本轮访谈已完成，等待查看最终汇总结果。";
+        answerInput.disabled = true;
+        submitBtn.disabled = true;
+        return;
+      }
+      questionIndexNode.textContent = `第 ${question.question_id} 题`;
+      questionTextNode.textContent = question.question_text;
+      updateProgress();
+      if (!autoDemoRunning) {
+        answerInput.focus();
+      }
+    }
+
+    function appendTurnResult(result) {
+      turnResults.push(result);
+      const node = document.createElement("article");
+      node.className = "result-card";
+      node.innerHTML = `
+        <div class="result-top">
+          <div>
+            <div class="result-label">Turn ${result.question_id}</div>
+            <h3>${escapeHtml(result.question_text)}</h3>
+          </div>
+          <div class="pill ${result.risk_flag ? "risk" : result.polarity === "deny" ? "safe" : "warn"}">
+            ${result.risk_flag ? "risk_flag=true" : "risk_flag=false"}
+          </div>
+        </div>
+        <div class="result-block"><div class="result-label">受试者回答</div><div>${escapeHtml(result.answer)}</div></div>
+        <div class="pill-row">
+          <span class="pill">${escapeHtml(result.symptom)}</span>
+          <span class="pill">${escapeHtml(zhDuration(result.duration))}</span>
+          <span class="pill">${escapeHtml(zhFrequency(result.frequency))}</span>
+          <span class="pill">${escapeHtml(zhSeverity(result.severity))}</span>
+          <span class="pill ${result.polarity === "support" ? "risk" : result.polarity === "deny" ? "safe" : "warn"}">${escapeHtml(zhPolarity(result.polarity))}</span>
+          <span class="pill">置信度=${Number(result.confidence).toFixed(2)}</span>
+          <span class="pill ${result.review_passed ? "safe" : "warn"}">${result.review_passed ? "复核通过" : "复核未完全通过"}</span>
+          <span class="pill">重试次数=${Number(result.retry_count)}</span>
+        </div>
+        <div class="result-block"><div class="result-label">持续时间 / 频率说明</div><div>${escapeHtml(result.duration_text)} / ${escapeHtml(result.frequency_text)}</div></div>
+        <div class="result-block"><div class="result-label">解释说明</div><div>${escapeHtml(result.explanation)}</div></div>
+        <div class="result-block"><div class="result-label">复核说明</div><div>${escapeHtml(result.review_notes)}</div></div>
+        <div class="result-block">
+          <div class="result-label">复核发现的问题</div>
+          <ul class="evidence-list">${(result.review_issues || []).length ? result.review_issues.map(item => `<li>${escapeHtml(item)}</li>`).join("") : "<li>无</li>"}</ul>
+        </div>
+        <div class="result-block">
+          <div class="result-label">依据证据</div>
+          <ul class="evidence-list">${result.evidence.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+      `;
+      feed.appendChild(node);
+      feed.scrollTop = feed.scrollHeight;
+      updateStats();
+    }
+
+    function appendSummary(result) {
+      const node = document.createElement("article");
+      node.className = "result-card summary-card";
+      node.innerHTML = `
+        <div class="summary-hero">
+          <div>
+            <div class="result-label">最终整场总结</div>
+            <h3 style="margin:0 0 10px;">${escapeHtml(formatClassification(result.session_classification))}</h3>
+            <div>${escapeHtml(result.summary)}</div>
+          </div>
+          <div class="summary-score">
+            <div class="result-label">总体置信度</div>
+            <strong>${Number(result.overall_confidence).toFixed(2)}</strong>
+            <div class="pill ${result.overall_risk === "high" ? "risk" : result.overall_risk === "low" ? "safe" : "warn"}" style="margin-top:10px;">
+              ${escapeHtml(zhOverallRisk(result.overall_risk))}
+            </div>
+          </div>
+        </div>
+        <div class="result-block"><div class="result-label">解释说明</div><div>${escapeHtml(result.explanation)}</div></div>
+        <div class="result-block">
+          <div class="result-label">症状总结</div>
+          <ul class="summary-list">${result.symptom_summary.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+        <div class="result-block">
+          <div class="result-label">关键发现</div>
+          <ul class="summary-list">${result.key_findings.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+        <div class="result-block">
+          <div class="result-label">缺失信息</div>
+          <ul class="summary-list">${result.missing_information.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+      `;
+      feed.appendChild(node);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function appendSystemCard(title, message) {
+      const node = document.createElement("article");
+      node.className = "result-card";
+      node.innerHTML = `<div class="result-label">${escapeHtml(title)}</div><div>${escapeHtml(message)}</div>`;
+      feed.appendChild(node);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function resetInterviewState() {
+      currentIndex = 0;
+      responses = [];
+      turnResults = [];
+      inspectedIndex = null;
+      busy = false;
+      autoDemoRunning = false;
+      answerInput.disabled = false;
+      answerInput.value = "";
+      feed.innerHTML = `
+        <div class="result-card">
+          <div class="result-label">已就绪</div>
+          <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的分类总结。</div>
+        </div>
+      `;
+      submitBtn.disabled = false;
+      clearBtn.disabled = false;
+      demoBtn.disabled = false;
+      resetBtn.disabled = false;
+      renderQuestion();
+      updateStats();
+      renderReviewPanel();
+    }
+
+    async function analyzeSingleAnswer(answer) {
+      const question = questions[currentIndex];
+      const response = await fetch("/api/analyze-turn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: question.question_id,
+          answer
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.detail || "单题分析失败");
+      }
+      responses.push({ question_id: question.question_id, answer });
+      appendTurnResult(payload);
+      inspectedIndex = currentIndex;
+      currentIndex += 1;
+      answerInput.value = "";
+      updateProgress();
+      renderReviewPanel();
+    }
+
+    async function analyzeCurrentTurn() {
+      if (busy) return;
+      const answer = answerInput.value.trim();
+      if (!answer || !questions[currentIndex]) return;
+
+      busy = true;
+      submitBtn.disabled = true;
+      clearBtn.disabled = true;
+      demoBtn.disabled = true;
 
       try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text }),
-        });
+        await analyzeSingleAnswer(answer);
 
-        if (!response.ok) {
-          const payload = await response.json().catch(() => ({}));
-          throw new Error(payload.detail || "request failed");
+        if (responses.length >= questions.length) {
+          appendSystemCard("整场总结", "全部问题已完成，正在调用整场汇总分析。");
+          await analyzeSession();
+          renderQuestion();
+          return;
         }
 
-        const payload = await response.json();
-        pending.remove();
-        appendMessage("agent", payload.reply);
+        renderQuestion();
       } catch (error) {
-        pending.textContent = `Request failed: ${error.message}`;
+        appendSystemCard("错误", error.message || "请求失败");
       } finally {
-        send.disabled = false;
-        input.focus();
+        busy = false;
+        submitBtn.disabled = false;
+        clearBtn.disabled = false;
+        demoBtn.disabled = false;
       }
     }
 
-    send.addEventListener("click", submitMessage);
+    async function analyzeSession() {
+      const response = await fetch("/api/analyze-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: `session-${Date.now()}`,
+          responses,
+          turns: turnResults
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.detail || "整场汇总分析失败");
+      }
+      progressText.textContent = `第 ${questions.length} / ${questions.length} 题`;
+      progressPercent.textContent = "100%";
+      progressFill.style.width = "100%";
+      appendSummary(payload);
+    }
 
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && !event.shiftKey) {
+    async function runAutoDemo() {
+      if (busy || autoDemoRunning || !questions.length) return;
+      resetInterviewState();
+      autoDemoRunning = true;
+      updateStats();
+      appendSystemCard("自动演示", "正在使用预置回答自动跑完整个 14 轮流程。");
+      submitBtn.disabled = true;
+      clearBtn.disabled = true;
+      demoBtn.disabled = true;
+      answerInput.disabled = true;
+
+      try {
+        for (let i = 0; i < questions.length; i += 1) {
+          const answer = DEMO_ANSWERS[i] || "暂时没有额外回答。";
+          answerInput.value = answer;
+          await analyzeSingleAnswer(answer);
+
+          renderQuestion();
+        }
+
+        appendSystemCard("整场总结", "全部问题已完成，正在调用整场汇总分析。");
+        await analyzeSession();
+        renderQuestion();
+        appendSystemCard("自动演示", "自动演示已完成。你可以点击“重置本轮访谈”重新开始。");
+      } catch (error) {
+        appendSystemCard("错误", error.message || "自动演示失败");
+      } finally {
+        autoDemoRunning = false;
+        busy = false;
+        answerInput.disabled = true;
+        submitBtn.disabled = true;
+        clearBtn.disabled = false;
+        demoBtn.disabled = false;
+        updateStats();
+      }
+    }
+
+    async function bootstrap() {
+      try {
+        const [healthResponse, questionsResponse] = await Promise.all([
+          fetch("/health"),
+          fetch("/api/questions")
+        ]);
+        if (!healthResponse.ok || !questionsResponse.ok) {
+          throw new Error("后端不可用");
+        }
+        questions = await questionsResponse.json();
+        setStatus(true, "后端已就绪");
+        renderQuestionList();
+        resetInterviewState();
+      } catch (error) {
+        setStatus(false, "后端不可用");
+        appendSystemCard("错误", "无法加载后端服务或问题列表。");
+        questionIndexNode.textContent = "不可用";
+        questionTextNode.textContent = "后端不可用，请先启动服务。";
+        answerInput.disabled = true;
+        submitBtn.disabled = true;
+        demoBtn.disabled = true;
+      }
+    }
+
+    submitBtn.addEventListener("click", analyzeCurrentTurn);
+    clearBtn.addEventListener("click", () => {
+      answerInput.value = "";
+      answerInput.focus();
+    });
+    demoBtn.addEventListener("click", runAutoDemo);
+    resetBtn.addEventListener("click", resetInterviewState);
+    questionListNode.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-index]");
+      if (!button) return;
+      inspectedIndex = Number(button.dataset.index);
+      renderQuestionList();
+      renderReviewPanel();
+    });
+    answerInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
-        submitMessage();
+        analyzeCurrentTurn();
       }
     });
 
-    chips.forEach((chip) => {
-      chip.addEventListener("click", () => {
-        input.value = chip.dataset.prompt;
-        input.focus();
-      });
-    });
-
-    checkHealth();
-    input.focus();
+    bootstrap();
   </script>
 </body>
 </html>

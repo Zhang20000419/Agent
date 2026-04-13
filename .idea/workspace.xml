@@ -5,20 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dde4f5f7-39f1-49fc-a4cd-4137cbc0f2c1" name="Changes" comment="V1.0">
-      <change afterPath="$PROJECT_DIR$/.idea/copilot.data.migration.agent.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/copilot.data.migration.ask.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/copilot.data.migration.edit.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/interview_questions.py" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/app/interview_questions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/llm_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/app/llm_config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/app/pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/app/prompts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/static/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/app/static/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/depression_interview_demo/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/agent_service.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/llm_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/llm_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/static/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/static/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/interview_questions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/interview_questions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/llm_config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/prompts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/schemas.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/static/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/depression_interview_demo/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,18 +41,18 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "Zhang20000419"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Zhang20000419&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Zhang20000419/Agent",
-    "accountId": "c38e4427-c47f-4991-a5e3-b0cf2228fa77"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Zhang20000419/Agent&quot;,
+    &quot;accountId&quot;: &quot;c38e4427-c47f-4991-a5e3-b0cf2228fa77&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -71,6 +78,11 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

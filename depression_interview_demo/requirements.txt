@@ -1,7 +1,0 @@
-langchain>=1.2.15
-langchain-google-genai>=2.1.5
-langchain-community>=0.3.31
-PyJWT>=2.10.1
-fastapi>=0.115.0
-uvicorn>=0.30.6
-pydantic>=2.8.2

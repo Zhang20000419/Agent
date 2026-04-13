@@ -1,22 +1,24 @@
-import sys
+import json
 
-from app.agent_service import chat_once
+from app.interview_questions import INTERVIEW_QUESTIONS
+from app.pipeline import analyze_turn
 
 
 def main() -> None:
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    # CLI 入口主要用于快速验证单题分析，不依赖前端页面。
+    print("Mental interview demo. Type answers for the fixed questions. Type 'exit' to quit.")
 
-    print("LangChain agent is ready. Type 'exit' or 'quit' to stop.")
-
-    while True:
-        user_input = input("You: ").strip()
-        if not user_input:
-            continue
-        if user_input.lower() in {"exit", "quit"}:
+    for question in INTERVIEW_QUESTIONS:
+        print(f"\nQ{question.question_id}: {question.question_text}")
+        answer = input("Answer: ").strip()
+        if answer.lower() == "exit":
             print("Bye.")
             break
 
-        print(f"Agent: {chat_once(user_input)}")
+        # 直接复用后端同一套分析流程，避免 CLI 和 API 行为分叉。
+        result = analyze_turn(question.question_id, answer)
+        print(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()
