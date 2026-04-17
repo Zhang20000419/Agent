@@ -73,6 +73,7 @@ class PredictionResult(BaseModel):
     score: float = Field(ge=0.0, le=1.0)
     confidence: float = Field(ge=0.0, le=1.0)
     evidence: list[str] = Field(default_factory=list)
+    analysis: str = ""
     auxiliary_outputs: dict[str, Any] = Field(default_factory=dict)
     model_name: str
     model_version: str

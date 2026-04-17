@@ -10,6 +10,7 @@ class TaskType(StrEnum):
     QA = "qa"
     READING = "reading"
     MOVIE = "movie"
+    INTERVIEW = "interview"
 
 
 class Modality(StrEnum):

@@ -7,6 +7,10 @@ from depression_detection.config.settings import RuntimeSettings
 from depression_detection.preprocessing.audio_extraction import prepare_audio_for_transcription
 from depression_detection.preprocessing.schemas import AudioTranscriptionInput, TranscriptionResult
 from depression_detection.shared.exceptions import TranscriptionError
+from depression_detection.shared.logging import get_logger
+from depression_detection.shared.tempfiles import UPLOAD_PREFIX, make_named_temp_file
+
+logger = get_logger(__name__)
 
 
 class TranscriptionService:
@@ -38,6 +42,7 @@ class TranscriptionService:
         try:
             prepared_audio = prepare_audio_for_transcription(str(source_path), self._settings)
         except Exception as preparation_error:
+            logger.exception("Audio preparation failed for transcription: source=%s", source_path, exc_info=preparation_error)
             raise TranscriptionError(str(preparation_error)) from preparation_error
 
         persisted_prepared_audio: Path | None = None
@@ -47,16 +52,21 @@ class TranscriptionService:
             shutil.copyfile(prepared_audio, persisted_prepared_audio)
 
         try:
+            logger.info("Transcription primary start: provider=%s audio=%s", getattr(self._primary, "provider_name", type(self._primary).__name__), prepared_audio)
             result = self._primary.transcribe(str(prepared_audio))
             result.metadata["prepared_audio_path"] = str(persisted_prepared_audio or prepared_audio)
+            logger.info("Transcription primary success: provider=%s audio=%s", result.provider, prepared_audio)
             return result
         except Exception as primary_error:
             if not self._settings.enable_baidu_fallback or self._fallback is None:
+                logger.exception("Transcription primary failed without fallback: audio=%s", prepared_audio, exc_info=primary_error)
                 raise TranscriptionError(str(primary_error)) from primary_error
+            logger.warning("Transcription primary failed, switching to fallback: audio=%s error=%s", prepared_audio, primary_error)
             fallback_result = self._fallback.transcribe(str(prepared_audio))
             fallback_result.used_fallback = True
             fallback_result.metadata["prepared_audio_path"] = str(persisted_prepared_audio or prepared_audio)
             fallback_result.metadata["primary_error"] = str(primary_error)
+            logger.info("Transcription fallback success: provider=%s audio=%s", fallback_result.provider, prepared_audio)
             return fallback_result
         finally:
             if cleanup_source and source_path is not None and source_path.exists():
@@ -67,10 +77,8 @@ class TranscriptionService:
                     prepared_path.unlink()
 
     def _persist_audio_bytes(self, audio_bytes: bytes, filename: str | None, content_type: str | None) -> Path:
-        output_dir = Path(self._settings.media_temp_dir).expanduser().resolve()
-        output_dir.mkdir(parents=True, exist_ok=True)
         suffix = self._resolve_suffix(filename, content_type)
-        source_path = output_dir / f"upload-{uuid4().hex}{suffix}"
+        source_path = make_named_temp_file(prefix=f"{UPLOAD_PREFIX}{uuid4().hex}-", suffix=suffix)
         source_path.write_bytes(audio_bytes)
         return source_path
 

@@ -1,4 +1,6 @@
 from depression_detection.application.services.archive_service import ArchiveService
+from depression_detection.application.services.debug_service import DebugServiceFacade
+from depression_detection.application.services.interview_analysis_service import InterviewAnalysisService
 from depression_detection.application.services.interview_service import InterviewServiceFacade
 from depression_detection.application.services.movie_service import MovieServiceFacade
 from depression_detection.application.services.prediction_service import PredictionServiceFacade
@@ -28,6 +30,7 @@ class AppContainer:
         self._providers = self._register_predictors()
         self._archive_service = ArchiveService(self.settings)
         self._transcription_service = self._build_transcription_service()
+        self._prediction_service = PredictionServiceFacade(self.registry)
         self._qa_service = QAServiceFacade(
             QAAnalysisService(
                 text_runtime=self._providers["text_structured"],
@@ -37,15 +40,22 @@ class AppContainer:
         )
         self._reading_service = ReadingServiceFacade(ReadingTaskService(self.registry, self.settings))
         self._movie_service = MovieServiceFacade(MovieTaskService(self.registry, self.settings))
+        self._debug_service = DebugServiceFacade(self._transcription_service, self._qa_service)
+        self._interview_analysis_service = InterviewAnalysisService(
+            archive_service=self._archive_service,
+            prediction_service=self._prediction_service,
+            qa_service=self._qa_service,
+            transcription_service=self._transcription_service,
+            settings=self.settings,
+        )
         self._interview_service = InterviewServiceFacade(
             SessionWorkflowService(
                 archive_service=self._archive_service,
-                qa_service=self._qa_service,
-                transcription_service=self._transcription_service,
+                prediction_service=self._prediction_service,
+                interview_analysis_service=self._interview_analysis_service,
                 settings=self.settings,
             )
         )
-        self._prediction_service = PredictionServiceFacade(self.registry)
 
     def _register_predictors(self) -> dict[str, object]:
         llm_text = LLMTextPredictor()
@@ -132,6 +142,9 @@ class AppContainer:
 
     def interview_service(self) -> InterviewServiceFacade:
         return self._interview_service
+
+    def debug_service(self) -> DebugServiceFacade:
+        return self._debug_service
 
     def prediction_service(self) -> PredictionServiceFacade:
         return self._prediction_service

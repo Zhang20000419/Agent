@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from depression_detection.interfaces.api.routers.debug import router as debug_router
 from depression_detection.interfaces.api.routers.health import router as health_router
 from depression_detection.interfaces.api.routers.interviews import router as interviews_router
 from depression_detection.interfaces.api.routers.movie import router as movie_router
@@ -10,6 +11,7 @@ from depression_detection.interfaces.api.routers.reading import router as readin
 
 def create_app(title: str = "Mental Interview Demo", version: str = "0.1.0") -> FastAPI:
     app = FastAPI(title=title, version=version)
+    app.include_router(debug_router)
     app.include_router(health_router)
     app.include_router(interviews_router)
     app.include_router(qa_router)

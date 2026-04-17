@@ -19,3 +19,7 @@ def get_prediction_service():
 
 def get_interview_service():
     return get_container().interview_service()
+
+
+def get_debug_service():
+    return get_container().debug_service()

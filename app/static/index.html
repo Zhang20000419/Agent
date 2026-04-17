@@ -196,6 +196,7 @@
     .actions {
       display: flex;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 12px;
       min-height: 58px;
     }
@@ -322,6 +323,7 @@
 
         <div class="actions">
           <button id="primary-btn" class="primary hidden" type="button"></button>
+          <button id="secondary-btn" class="ghost hidden" type="button"></button>
         </div>
       </section>
 
@@ -361,6 +363,7 @@
     const contentSubtitle = document.getElementById('content-subtitle');
     const contentBody = document.getElementById('content-body');
     const primaryBtn = document.getElementById('primary-btn');
+    const secondaryBtn = document.getElementById('secondary-btn');
     const cameraPreview = document.getElementById('camera-preview');
     const recordingDot = document.getElementById('recording-dot');
     const recordingText = document.getElementById('recording-text');
@@ -417,6 +420,13 @@
       primaryBtn.onclick = null;
     }
 
+    function clearSecondaryAction() {
+      secondaryBtn.classList.add('hidden');
+      secondaryBtn.disabled = false;
+      secondaryBtn.textContent = '';
+      secondaryBtn.onclick = null;
+    }
+
     function setPrimaryAction(label, handler) {
       primaryBtn.classList.remove('hidden');
       primaryBtn.textContent = label;
@@ -425,8 +435,28 @@
         primaryBtn.disabled = true;
         try {
           await handler();
+        } catch (error) {
+          console.error(error);
+          setStatusNote(error?.message || '执行当前操作时发生错误，请重试。');
         } finally {
           primaryBtn.disabled = false;
+        }
+      };
+    }
+
+    function setSecondaryAction(label, handler) {
+      secondaryBtn.classList.remove('hidden');
+      secondaryBtn.textContent = label;
+      secondaryBtn.disabled = false;
+      secondaryBtn.onclick = async () => {
+        secondaryBtn.disabled = true;
+        try {
+          await handler();
+        } catch (error) {
+          console.error(error);
+          setStatusNote(error?.message || '执行当前调试操作时发生错误，请重试。');
+        } finally {
+          secondaryBtn.disabled = false;
         }
       };
     }
@@ -543,8 +573,146 @@
       setStatusNote(`session 已创建：${sessionId}。问题数量=${payload.session.question_count || assetManifest.qa_questions.length}。`);
     }
 
+    async function refreshSession() {
+      if (!sessionId) return sessionState;
+      const response = await fetch(`/api/v1/interviews/${sessionId}`);
+      if (!response.ok) {
+        throw new Error('刷新 session 状态失败');
+      }
+      sessionState = await response.json();
+      renderSidebar();
+      return sessionState;
+    }
+
+    function orderedQaRecords() {
+      return Object.values(sessionState?.stages?.qa || {}).sort((left, right) => Number(left.item_key.slice(1)) - Number(right.item_key.slice(1)));
+    }
+
+    function completedQaCount() {
+      return orderedQaRecords().filter((record) => record.diagnosis?.status === 'completed').length;
+    }
+
+    function renderResultScreen() {
+      const summary = sessionState?.analysis_summary || {};
+      const qaRecords = orderedQaRecords();
+      const overall = summary.multimodal || {};
+      const visionResult = summary.vision || {};
+      const audioResult = summary.audio || {};
+      const textResult = summary.text || {};
+      const sessionAnalysis = summary.text_session_analysis || {};
+      const movieStageBlocks = Object.values(sessionState?.stages?.movie || {}).map((record) => `
+        <div class="completion-card" style="margin-top:14px;">
+          <div class="small-label">看电影阶段 · ${escapeHtml(record.item_label || record.item_key)}</div>
+          <p><strong>状态：</strong>${escapeHtml(record.diagnosis?.status || 'unknown')}</p>
+          <p><strong>分析：</strong>${escapeHtml(record.diagnosis?.result?.analysis || '暂无')}</p>
+        </div>
+      `).join('');
+      const readingStageBlocks = Object.values(sessionState?.stages?.reading || {}).map((record) => `
+        <div class="completion-card" style="margin-top:14px;">
+          <div class="small-label">朗读阶段 · ${escapeHtml(record.item_label || record.item_key)}</div>
+          <p><strong>状态：</strong>${escapeHtml(record.diagnosis?.status || 'unknown')}</p>
+          <p><strong>分析：</strong>${escapeHtml(record.diagnosis?.result?.analysis || '暂无')}</p>
+        </div>
+      `).join('');
+      const transcriptBlocks = qaRecords.map((record) => {
+        const result = record.diagnosis?.result || {};
+        const analysis = result.turn_analysis || {};
+        return `
+          <div class="completion-card" style="margin-top:14px;">
+            <div class="small-label">${escapeHtml(record.item_label)}</div>
+            <p><strong>转录文本：</strong>${escapeHtml(result.transcript || '处理中')}</p>
+            <p class="muted"><strong>转录来源：</strong>${escapeHtml(result.transcript_provider || 'unknown')} / fallback=${escapeHtml(String(result.transcript_used_fallback ?? 'unknown'))}</p>
+            <p><strong>单题分析：</strong>${escapeHtml(analysis.explanation || '暂无')}</p>
+          </div>
+        `;
+      }).join('');
+
+      setPanel({
+        phase: '结果页',
+        title: overall.label ? `综合结果：${overall.label}` : '结果整理完成',
+        subtitle: overall.analysis || '后端已完成综合分析，下面展示文本转录、单题分析和最终融合结果。',
+        bodyHtml: `
+          <div style="width:min(100%, 920px);">
+            <div class="completion-card">
+              <div class="small-label">最终综合结果</div>
+              <p><strong>标签：</strong>${escapeHtml(overall.label || 'unknown')}</p>
+              <p><strong>置信度：</strong>${escapeHtml(overall.confidence != null ? Number(overall.confidence).toFixed(2) : '0.00')}</p>
+              <p><strong>分析：</strong>${escapeHtml(overall.analysis || '暂无')}</p>
+            </div>
+            <div class="completion-card" style="margin-top:14px;">
+              <div class="small-label">视觉模态（当前为占位模型）</div>
+              <p><strong>标签：</strong>${escapeHtml(visionResult.label || 'unknown')}</p>
+              <p><strong>分析：</strong>${escapeHtml(visionResult.analysis || '暂无')}</p>
+            </div>
+            <div class="completion-card" style="margin-top:14px;">
+              <div class="small-label">音频模态（当前为占位模型）</div>
+              <p><strong>标签：</strong>${escapeHtml(audioResult.label || 'unknown')}</p>
+              <p><strong>分析：</strong>${escapeHtml(audioResult.analysis || '暂无')}</p>
+            </div>
+            <div class="completion-card" style="margin-top:14px;">
+              <div class="small-label">文本模态总结</div>
+              <p><strong>标签：</strong>${escapeHtml(textResult.label || 'unknown')}</p>
+              <p><strong>分析：</strong>${escapeHtml(textResult.analysis || '暂无')}</p>
+              <p class="muted"><strong>summary：</strong>${escapeHtml(sessionAnalysis.summary || '暂无')}</p>
+            </div>
+            ${movieStageBlocks}
+            ${readingStageBlocks}
+            ${transcriptBlocks}
+          </div>
+        `,
+      });
+      setStatusNote('后端已完成文本模态与多模态综合分析，结果如下。');
+    }
+
+    async function waitForInterviewResults() {
+      clearPrimaryAction();
+      clearSecondaryAction();
+      while (true) {
+        await refreshSession();
+        const summary = sessionState?.analysis_summary || {};
+        const done = completedQaCount();
+        const total = assetManifest.qa_questions.length || 0;
+        if (summary.status === 'completed') {
+          renderResultScreen();
+          setRecordingState('访谈完成，分析已完成。');
+          return;
+        }
+        if (summary.status && summary.status.startsWith('failed')) {
+          setPanel({
+            phase: '结果页',
+            title: '分析失败',
+            subtitle: summary.error || '后端分析失败，请稍后重试。',
+            bodyHtml: `
+              <div class="completion-card">
+                <div class="small-label">错误信息</div>
+                <p>${escapeHtml(summary.error || '未知错误')}</p>
+              </div>
+            `,
+          });
+          setStatusNote(summary.error || '后端分析失败');
+          setRecordingState('访谈完成，但分析失败。');
+          return;
+        }
+        setPanel({
+          phase: '结果页',
+          title: '正在生成分析结果',
+          subtitle: `后端正在异步处理 QA 视频中的音频分离、转录、文本分析与综合判断。已完成 ${done}/${total} 题。`,
+          bodyHtml: `
+            <div class="countdown-wrap">
+              <div class="countdown-number">…</div>
+              <div class="muted">请稍候，页面会自动刷新结果</div>
+            </div>
+          `,
+        });
+        setStatusNote(`结果计算中：已完成 ${done}/${total} 题。`);
+        setRecordingState('访谈完成，后端正在异步分析。');
+        await sleep(1500);
+      }
+    }
+
     async function runCountdownScreen(phase, title, subtitle, seconds) {
       clearPrimaryAction();
+      clearSecondaryAction();
       for (let remaining = seconds; remaining > 0; remaining -= 1) {
         setPanel({
           phase,
@@ -604,6 +772,7 @@
           : '<div class="completion-card"><div class="small-label">缺少素材</div><p>当前标签下未发现电影资源，请检查 <code>app/static/interview-assets/movie/</code> 目录。</p></div>',
       });
       clearPrimaryAction();
+      clearSecondaryAction();
       if (!item.url) {
         await sleep(1500);
         return;
@@ -611,8 +780,25 @@
       await startRecordingSegment({ stage: 'movie', key: item.key, title: item.title });
       const player = document.getElementById('stage-video');
       const ended = new Promise((resolve, reject) => {
-        player.addEventListener('ended', () => resolve(), { once: true });
-        player.addEventListener('error', () => reject(new Error('电影播放失败')), { once: true });
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          clearSecondaryAction();
+          resolve();
+        };
+        const fail = () => {
+          if (settled) return;
+          settled = true;
+          clearSecondaryAction();
+          reject(new Error('电影播放失败'));
+        };
+        player.addEventListener('ended', finish, { once: true });
+        player.addEventListener('error', fail, { once: true });
+        setSecondaryAction('调试：下一个电影', async () => {
+          player.pause();
+          finish();
+        });
       });
       await attemptVideoPlay(player, item.title);
       await ended;
@@ -631,10 +817,12 @@
           </div>
         `,
       });
+      clearSecondaryAction();
       await startRecordingSegment({ stage: 'reading', key: item.key, title: item.title });
       await new Promise((resolve) => {
         setPrimaryAction('朗读结束', async () => {
           clearPrimaryAction();
+          clearSecondaryAction();
           await stopAndUploadCurrentSegment();
           resolve();
         });
@@ -696,26 +884,12 @@
       for (let index = 0; index < questions.length; index += 1) {
         await runQuestionSegment(questions[index], index + 1, questions.length);
       }
-
-      clearPrimaryAction();
-      setPanel({
-        phase: '完成',
-        title: '本次访谈流程已完成',
-        subtitle: '三阶段内容已经完成采集与归档。后端可基于 session 继续进行诊断与汇总。',
-        bodyHtml: `
-          <div class="completion-card">
-            <div class="small-label">完成提示</div>
-            <p>session_id: ${escapeHtml(sessionId)}</p>
-            <p class="muted">电影、朗读、访谈问答的录制内容已经按阶段上传到后端归档目录。</p>
-          </div>
-        `,
-      });
-      setRecordingState('访谈完成，录制已结束。');
-      setStatusNote('整场流程已结束。你可以关闭页面，或刷新重新开始新的 session。');
+      await waitForInterviewResults();
     }
 
     async function bootstrap() {
       try {
+        clearSecondaryAction();
         setPanel({
           phase: '准备中',
           title: '正在初始化流程',
@@ -735,7 +909,7 @@
         setPanel({
           phase: '初始化失败',
           title: '无法自动开始流程',
-          subtitle: error.message || '请确认浏览器允许访问摄像头和麦克风，并检查静态资源是否已准备好。',
+          subtitle: `${error.message || '请确认浏览器允许访问摄像头和麦克风，并检查静态资源是否已准备好。'}\n\n如需排查后端异常，请查看 .cache/logs/interview-backend.log；也可调用 /api/v1/debug/qa-chain/{question_id} 单独验证后端链路。`,
           bodyHtml: `
             <div class="completion-card">
               <div class="small-label">错误信息</div>
@@ -745,6 +919,7 @@
         });
         setStatusNote(error.message || '初始化失败');
         setRecordingState('尚未连接摄像头。');
+        clearSecondaryAction();
         cameraRetryBtn.classList.remove('hidden');
       }
     }

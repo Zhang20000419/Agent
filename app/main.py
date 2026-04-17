@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -13,9 +14,14 @@ from depression_detection.interfaces.api.qa_handlers import (
     predict_turn_response,
 )
 from depression_detection.interfaces.api.request_parsing import parse_turn_request
+from depression_detection.shared.logging import configure_interview_logging, get_logger
+from depression_detection.shared.tempfiles import cleanup_stale_temp_artifacts, get_temp_root
 from depression_detection.tasks.qa.schemas import HealthResponse, SessionAnalysis, SessionInput, TurnAnalysis, TurnInput
 
 settings = get_runtime_settings()
+configure_interview_logging(settings)
+logger = get_logger(__name__)
+cleanup_stale_temp_artifacts(settings.temp_cleanup_max_age_seconds)
 app = create_app(title=settings.app_name, version=settings.version)
 static_dir = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
@@ -33,6 +39,23 @@ def index():
 @app.get("/health", response_model=HealthResponse)
 def health_check():
     return HealthResponse(status="ok")
+
+
+@app.get("/api/v1/debug/runtime")
+def debug_runtime():
+    return {
+        "ffmpeg_binary": settings.ffmpeg_binary,
+        "temp_root": str(get_temp_root()),
+        "temp_cleanup_max_age_seconds": settings.temp_cleanup_max_age_seconds,
+        "interview_archive_root": settings.interview_archive_root,
+        "interview_log_dir": settings.interview_log_dir,
+    }
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled application error on %s %s", request.method, request.url.path, exc_info=exc)
+    return JSONResponse(status_code=500, content={"detail": "internal server error"})
 
 
 @app.get("/api/questions")

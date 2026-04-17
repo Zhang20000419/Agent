@@ -3,7 +3,7 @@ import unittest
 from fastapi.testclient import TestClient
 
 from depression_detection.domain.enums import Modality, PredictionLabel, TaskType
-from depression_detection.interfaces.api.deps import get_prediction_service, get_qa_service
+from depression_detection.interfaces.api.deps import get_debug_service, get_prediction_service, get_qa_service
 from depression_detection.interfaces.api.main import create_app
 from depression_detection.model.schemas import PredictionResult, VisionPredictionInput
 from depression_detection.tasks.qa.schemas import SessionAnalysis, TurnAnalysis
@@ -90,11 +90,27 @@ class _FakePredictionService:
         raise NotImplementedError
 
 
+class _FakeDebugService:
+    def check_qa_chain(self, question_id: int, capture_bytes: bytes, filename: str | None = None, content_type: str | None = None):
+        return {
+            "success": True,
+            "question_id": question_id,
+            "filename": filename,
+            "content_type": content_type,
+            "size_bytes": len(capture_bytes),
+            "transcription": {"text": "转写结果", "provider": "whisper", "used_fallback": False},
+            "turn_analysis": {"question_id": question_id, "answer": "转写结果"},
+            "error_stage": None,
+            "error": None,
+        }
+
+
 class V1ApiRouteTests(unittest.TestCase):
     def setUp(self):
         app = create_app()
         app.dependency_overrides[get_qa_service] = lambda: _FakeQAService()
         app.dependency_overrides[get_prediction_service] = lambda: _FakePredictionService()
+        app.dependency_overrides[get_debug_service] = lambda: _FakeDebugService()
         self.client = TestClient(app)
 
     def tearDown(self):
@@ -144,9 +160,19 @@ class V1ApiRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["modality"], Modality.VISION.value)
 
-    def test_unimplemented_task_modalities_return_501(self):
+    def test_unimplemented_task_modalities_now_return_placeholder_results(self):
         response = self.client.post("/api/v1/reading:predict", json={"sample_id": "s1", "audio_path": "demo.wav"})
-        self.assertEqual(response.status_code, 501)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["label"], "uncertain")
+
+    def test_debug_qa_chain_route_accepts_upload(self):
+        response = self.client.post(
+            "/api/v1/debug/qa-chain/6",
+            files={"capture": ("sample.webm", b"video", "video/webm")},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["question_id"], 6)
 
 
 if __name__ == "__main__":

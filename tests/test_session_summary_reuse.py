@@ -113,6 +113,13 @@ class SessionSummaryReuseTests(unittest.TestCase):
         self.assertIn("请休息 10 秒", html)
         self.assertIn("朗读结束", html)
         self.assertIn("下一个问题", html)
+        self.assertIn("调试：下一个电影", html)
+        self.assertNotIn("调试：下一段朗读", html)
+        self.assertIn("analysis_summary", html)
+        self.assertIn("正在生成分析结果", html)
+        self.assertIn("视觉模态（当前为占位模型）", html)
+        self.assertIn("音频模态（当前为占位模型）", html)
+        self.assertIn(".cache/logs/interview-backend.log", html)
 
     def test_frontend_requests_camera_and_microphone_capture(self):
         html = Path("app/static/index.html").read_text(encoding="utf-8")

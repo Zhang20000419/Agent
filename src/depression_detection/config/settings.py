@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import time
 import warnings
@@ -43,12 +44,14 @@ class RuntimeSettings(BaseModel):
     baidu_asr_timeout_seconds: int = Field(default=30)
 
     ffmpeg_binary: str = Field(default="ffmpeg")
+    ffmpeg_timeout_seconds: int = Field(default=120)
     audio_sample_rate: int = Field(default=16000)
     audio_channels: int = Field(default=1)
     interview_question_dir: str = Field(default="app/static/interview-assets/interview")
     interview_archive_root: str = Field(default=".cache/interviews")
-    media_temp_dir: str = Field(default=".cache/media")
-    transcript_cache_dir: str = Field(default=".cache/transcripts")
+    interview_analysis_workers: int = Field(default=1)
+    interview_log_dir: str = Field(default=".cache/logs")
+    temp_cleanup_max_age_seconds: int = Field(default=300)
     keep_temp_files: bool = Field(default=False)
 
     zhipu_api_key: str = Field(default="")
@@ -93,13 +96,15 @@ class RuntimeSettings(BaseModel):
             baidu_asr_api_key=_get_env("BAIDU_ASR_API_KEY") or "",
             baidu_asr_secret_key=_get_env("BAIDU_ASR_SECRET_KEY") or "",
             baidu_asr_timeout_seconds=int(_get_env("BAIDU_ASR_TIMEOUT_SECONDS") or "30"),
-            ffmpeg_binary=_get_env("FFMPEG_BINARY") or "ffmpeg",
+            ffmpeg_binary=_get_env("FFMPEG_BINARY") or _default_ffmpeg_binary(),
+            ffmpeg_timeout_seconds=int(_get_env("FFMPEG_TIMEOUT_SECONDS") or "120"),
             audio_sample_rate=int(_get_env("AUDIO_SAMPLE_RATE") or "16000"),
             audio_channels=int(_get_env("AUDIO_CHANNELS") or "1"),
             interview_question_dir=_get_env("INTERVIEW_QUESTION_DIR") or "app/static/interview-assets/interview",
             interview_archive_root=_get_env("INTERVIEW_ARCHIVE_ROOT") or ".cache/interviews",
-            media_temp_dir=_get_env("MEDIA_TEMP_DIR") or ".cache/media",
-            transcript_cache_dir=_get_env("TRANSCRIPT_CACHE_DIR") or ".cache/transcripts",
+            interview_analysis_workers=int(_get_env("INTERVIEW_ANALYSIS_WORKERS") or "1"),
+            interview_log_dir=_get_env("INTERVIEW_LOG_DIR") or ".cache/logs",
+            temp_cleanup_max_age_seconds=int(_get_env("TEMP_CLEANUP_MAX_AGE_SECONDS") or "300"),
             keep_temp_files=_get_bool_env("KEEP_TEMP_FILES", False),
             zhipu_api_key=_get_env("ZHIPUAI_API_KEY") or "",
             zhipu_model=_get_env("ZHIPU_MODEL") or "glm-4-flash",
@@ -142,12 +147,14 @@ def _bootstrap_shell_env() -> None:
         "BAIDU_ASR_SECRET_KEY",
         "BAIDU_ASR_TIMEOUT_SECONDS",
         "FFMPEG_BINARY",
+        "FFMPEG_TIMEOUT_SECONDS",
         "AUDIO_SAMPLE_RATE",
         "AUDIO_CHANNELS",
         "INTERVIEW_QUESTION_DIR",
         "INTERVIEW_ARCHIVE_ROOT",
-        "MEDIA_TEMP_DIR",
-        "TRANSCRIPT_CACHE_DIR",
+        "INTERVIEW_ANALYSIS_WORKERS",
+        "INTERVIEW_LOG_DIR",
+        "TEMP_CLEANUP_MAX_AGE_SECONDS",
         "KEEP_TEMP_FILES",
         "ZHIPUAI_API_KEY",
         "ZHIPU_MODEL",
@@ -205,6 +212,17 @@ def _get_bool_env(name: str, default: bool) -> bool:
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _default_ffmpeg_binary() -> str:
+    for candidate in [
+        "/opt/homebrew/bin/ffmpeg",
+        "/usr/local/bin/ffmpeg",
+        shutil.which("ffmpeg"),
+    ]:
+        if candidate and os.path.exists(candidate):
+            return candidate
+    return "ffmpeg"
 
 
 @lru_cache(maxsize=1)

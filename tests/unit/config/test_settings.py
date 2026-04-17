@@ -2,7 +2,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from depression_detection.config.settings import RuntimeSettings
+from depression_detection.config.settings import RuntimeSettings, _default_ffmpeg_binary
 
 
 class RuntimeSettingsTests(unittest.TestCase):
@@ -22,8 +22,12 @@ class RuntimeSettingsTests(unittest.TestCase):
             "ENABLE_BAIDU_FALLBACK": "true",
             "WHISPER_MODEL_NAME": "small",
             "BAIDU_ASR_TIMEOUT_SECONDS": "45",
+            "FFMPEG_TIMEOUT_SECONDS": "90",
             "INTERVIEW_QUESTION_DIR": "app/static/interview-assets/interview",
             "INTERVIEW_ARCHIVE_ROOT": "/tmp/interviews",
+            "INTERVIEW_ANALYSIS_WORKERS": "2",
+            "INTERVIEW_LOG_DIR": "/tmp/interview-logs",
+            "TEMP_CLEANUP_MAX_AGE_SECONDS": "600",
         },
         clear=False,
     )
@@ -42,9 +46,20 @@ class RuntimeSettingsTests(unittest.TestCase):
         self.assertTrue(settings.enable_baidu_fallback)
         self.assertEqual(settings.whisper_model_name, "small")
         self.assertEqual(settings.baidu_asr_timeout_seconds, 45)
+        self.assertEqual(settings.ffmpeg_timeout_seconds, 90)
         self.assertEqual(settings.interview_question_dir, "app/static/interview-assets/interview")
         self.assertEqual(settings.interview_archive_root, "/tmp/interviews")
+        self.assertEqual(settings.interview_analysis_workers, 2)
+        self.assertEqual(settings.interview_log_dir, "/tmp/interview-logs")
+        self.assertEqual(settings.temp_cleanup_max_age_seconds, 600)
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RuntimeBinaryDetectionTests(unittest.TestCase):
+    @patch("depression_detection.config.settings.os.path.exists", side_effect=lambda value: value == "/opt/homebrew/bin/ffmpeg")
+    @patch("depression_detection.config.settings.shutil.which", return_value=None)
+    def test_default_ffmpeg_binary_prefers_homebrew_path(self, *_):
+        self.assertEqual(_default_ffmpeg_binary(), "/opt/homebrew/bin/ffmpeg")

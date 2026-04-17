@@ -4,28 +4,36 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="dde4f5f7-39f1-49fc-a4cd-4137cbc0f2c1" name="Changes" comment="多模态抑郁识别：实现了前端通过摄像头采集视频并且上传，后端调用本地和远程服务实现文字转录以及基于文本的抑郁识别，音视频目前仅占位。">
-      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/interview/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/movie/negative/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/movie/neutral/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/movie/positive/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/reading/negative/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/reading/neutral/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/reading/positive/.gitkeep" afterDir="false" />
+    <list default="true" id="dde4f5f7-39f1-49fc-a4cd-4137cbc0f2c1" name="Changes" comment="多模态抑郁识别：实现了前端的依次自动播放和视频上传，在好后端相应数据库能够找到视频文件。">
+      <change afterPath="$PROJECT_DIR$/app/static/抑郁图标.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/interview_questions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/interview_questions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/llm_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/llm_config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/prompts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/static/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/static/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/application/services/session_workflow_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/application/services/session_workflow_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/bootstrap/container.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/bootstrap/container.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/domain/enums.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/domain/enums.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/interfaces/api/deps.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/interfaces/api/deps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/interfaces/api/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/interfaces/api/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/interfaces/api/routers/interviews.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/interfaces/api/routers/interviews.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/model/providers/audio/local_audio_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/model/providers/audio/local_audio_predictor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/model/providers/multimodal/local_multimodal_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/model/providers/multimodal/local_multimodal_predictor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/model/providers/text/llm_text_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/model/providers/text/llm_text_predictor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/model/providers/vision/local_vision_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/model/providers/vision/local_vision_predictor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/model/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/model/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/preprocessing/audio_extraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/preprocessing/audio_extraction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/preprocessing/transcription/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/preprocessing/transcription/service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/preprocessing/transcription/whisper_transcriber.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/preprocessing/transcription/whisper_transcriber.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/depression_detection/tasks/interview/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/depression_detection/tasks/interview/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/api/test_v1_routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/api/test_v1_routes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_session_summary_reuse.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_session_summary_reuse.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/config/test_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/config/test_settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/preprocessing/test_audio_extraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/preprocessing/test_audio_extraction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/preprocessing/test_transcription_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/preprocessing/test_transcription_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/preprocessing/test_whisper_transcriber.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/preprocessing/test_whisper_transcriber.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/tasks/test_interview_workflow_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/tasks/test_interview_workflow_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,7 +83,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "multimodal",
-    "last_opened_file_path": "/Users/enchanted/PycharmProjects/PythonProject/app/static/interview-assets/interview",
+    "last_opened_file_path": "/Users/enchanted/PycharmProjects/PythonProject/app/static",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -86,11 +94,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app/static" />
       <recent name="$PROJECT_DIR$/app/static/interview-assets/interview" />
       <recent name="$PROJECT_DIR$/app/static/interview-assets/reading/negative" />
       <recent name="$PROJECT_DIR$/app/static/interview-assets/reading/neutral" />
       <recent name="$PROJECT_DIR$/app/static/interview-assets/reading/positive" />
-      <recent name="$PROJECT_DIR$/app/static/interview-assets/movie/negative" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -130,7 +138,15 @@
       <option name="project" value="LOCAL" />
       <updated>1775683084729</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="多模态抑郁识别：实现了前端的依次自动播放和视频上传，在好后端相应数据库能够找到视频文件。">
+      <option name="closed" value="true" />
+      <created>1776417193710</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1776417193710</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -150,7 +166,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="init" />
     <MESSAGE value="V1.0" />
-    <option name="LAST_COMMIT_MESSAGE" value="V1.0" />
+    <MESSAGE value="多模态抑郁识别：实现了前端的依次自动播放和视频上传，在好后端相应数据库能够找到视频文件。" />
+    <option name="LAST_COMMIT_MESSAGE" value="多模态抑郁识别：实现了前端的依次自动播放和视频上传，在好后端相应数据库能够找到视频文件。" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Agent$main.coverage" NAME="main Coverage Results" MODIFIED="1775668764627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

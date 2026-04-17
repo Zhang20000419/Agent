@@ -2,11 +2,12 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from depression_detection.model.schemas import PredictionResult
 from depression_detection.tasks.qa.schemas import InterviewQuestion
 
 
 InterviewStage = Literal["movie", "reading", "qa"]
-DiagnosisStatus = Literal["completed", "pending_model", "failed_preprocessing", "failed_model", "not_requested"]
+DiagnosisStatus = Literal["queued", "processing", "completed", "pending_model", "failed_preprocessing", "failed_model", "not_requested"]
 
 MOVIE_READING_LABELS = ("positive", "neutral", "negative")
 DIAGNOSIS_PENDING_MODEL = "pending_model"
@@ -36,6 +37,17 @@ class StageRecord(BaseModel):
     diagnosis: DiagnosisEnvelope
 
 
+class InterviewAnalysisSummary(BaseModel):
+    status: DiagnosisStatus = "not_requested"
+    completed_at: str | None = None
+    error: str | None = None
+    vision: PredictionResult | None = None
+    audio: PredictionResult | None = None
+    text: PredictionResult | None = None
+    multimodal: PredictionResult | None = None
+    text_session_analysis: dict[str, Any] | None = None
+
+
 class InterviewSessionState(BaseModel):
     session_id: str
     created_at: str
@@ -43,6 +55,7 @@ class InterviewSessionState(BaseModel):
     question_count: int = 0
     questions: list[InterviewQuestion] = Field(default_factory=list)
     stages: dict[str, dict[str, StageRecord]] = Field(default_factory=dict)
+    analysis_summary: InterviewAnalysisSummary = Field(default_factory=InterviewAnalysisSummary)
 
 
 class MovieAsset(BaseModel):

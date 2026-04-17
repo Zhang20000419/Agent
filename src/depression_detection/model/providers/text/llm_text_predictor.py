@@ -74,6 +74,7 @@ class LLMTextPredictor:
             score=parsed.score,
             confidence=parsed.confidence,
             evidence=parsed.evidence,
+            analysis=parsed.explanation,
             auxiliary_outputs={"explanation": parsed.explanation},
             model_name=type(self._get_model()).__name__,
             model_version="llm-text-v1",

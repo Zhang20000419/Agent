@@ -55,7 +55,7 @@
 
 ### 后端归档与存储约定
 
-后端应将每次访谈的原始媒体、派生音频、转录文本和诊断结果统一存放到一个**可配置的访谈归档根目录**中。配置入口应放在统一配置层（当前仓库配置集中在 `src/depression_detection/config/settings.py`；现有相关目录配置包括 `MEDIA_TEMP_DIR` 与 `TRANSCRIPT_CACHE_DIR`，后续可进一步收敛为单一访谈归档根目录配置）。
+后端应将每次访谈的原始媒体、派生音频、转录文本和诊断结果统一存放到一个**可配置的访谈归档根目录**中。配置入口应放在统一配置层（当前仓库配置集中在 `src/depression_detection/config/settings.py`）。
 
 建议的归档原则：
 

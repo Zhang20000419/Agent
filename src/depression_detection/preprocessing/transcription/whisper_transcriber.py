@@ -6,6 +6,7 @@ from pathlib import Path
 from depression_detection.config.settings import RuntimeSettings
 from depression_detection.preprocessing.schemas import TranscriptionResult
 from depression_detection.shared.exceptions import TranscriptionError
+from depression_detection.shared.tempfiles import WHISPER_PREFIX, make_temp_dir
 
 
 class WhisperTranscriber:
@@ -35,10 +36,6 @@ class WhisperTranscriber:
         if not source.exists():
             raise TranscriptionError(f"Audio path does not exist: {audio_path}")
 
-        output_dir = Path(self._settings.transcript_cache_dir).expanduser().resolve()
-        output_dir.mkdir(parents=True, exist_ok=True)
-        txt_path = output_dir / f"{source.stem}.txt"
-
         candidates = []
         if shutil.which("whisper"):
             candidates.append(["whisper"])
@@ -46,21 +43,24 @@ class WhisperTranscriber:
 
         last_error = ""
         for binary in candidates:
-            result = subprocess.run(
-                self._build_command(binary, source, output_dir),
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            if result.returncode == 0 and txt_path.exists():
-                text = txt_path.read_text(encoding="utf-8").strip()
-                if not text:
-                    raise TranscriptionError("Whisper transcription produced empty text")
-                return TranscriptionResult(
-                    text=text,
-                    language=self._settings.transcription_language,
-                    provider=self.provider_name,
-                    metadata={"path": str(source), "output": str(txt_path)},
+            with make_temp_dir(prefix=WHISPER_PREFIX) as output_dir_text:
+                output_dir = Path(output_dir_text).resolve()
+                txt_path = output_dir / f"{source.stem}.txt"
+                result = subprocess.run(
+                    self._build_command(binary, source, output_dir),
+                    capture_output=True,
+                    text=True,
+                    check=False,
                 )
-            last_error = result.stderr.strip() or result.stdout.strip()
+                if result.returncode == 0 and txt_path.exists():
+                    text = txt_path.read_text(encoding="utf-8").strip()
+                    if not text:
+                        raise TranscriptionError("Whisper transcription produced empty text")
+                    return TranscriptionResult(
+                        text=text,
+                        language=self._settings.transcription_language,
+                        provider=self.provider_name,
+                        metadata={"path": str(source)},
+                    )
+                last_error = result.stderr.strip() or result.stdout.strip()
         raise TranscriptionError(last_error or "Whisper transcription failed")

@@ -1,19 +1,14 @@
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock
 
 from depression_detection.application.services.archive_service import ArchiveService
 from depression_detection.application.services.session_workflow_service import SessionWorkflowService
 from depression_detection.config.settings import RuntimeSettings
-from depression_detection.preprocessing.schemas import TranscriptionResult
-from depression_detection.preprocessing.transcription.service import TranscriptionService
+from depression_detection.domain.enums import Modality, PredictionLabel, TaskType
+from depression_detection.model.schemas import PredictionResult
 from depression_detection.tasks.qa.schemas import TurnAnalysis
-
-
-class _PrimaryTranscriber:
-    def transcribe(self, audio_path: str) -> TranscriptionResult:
-        return TranscriptionResult(text="转写后的回答", language="zh", provider="whisper")
 
 
 class _DummyQAService:
@@ -40,50 +35,79 @@ class _DummyQAService:
         )
 
 
-class InterviewWorkflowServiceTests(unittest.TestCase):
-    def test_submit_qa_capture_persists_archive_audio_transcript_and_diagnosis(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            settings = RuntimeSettings(
-                interview_archive_root=temp_dir,
-                media_temp_dir=temp_dir,
-                keep_temp_files=False,
-            )
-            archive_service = ArchiveService(settings)
-            transcription_service = TranscriptionService(settings, _PrimaryTranscriber(), None)
-            workflow = SessionWorkflowService(archive_service, _DummyQAService(), transcription_service, settings)
-            session = archive_service.create_or_load_session("session-demo")
+class _DummyPredictionService:
+    def predict_vision(self, request):
+        return PredictionResult(
+            sample_id=request.sample_id,
+            task_type=request.task_type,
+            modality=Modality.VISION,
+            label=PredictionLabel.UNCERTAIN,
+            score=0.0,
+            confidence=0.0,
+            evidence=[request.video_path] if request.video_path else [],
+            analysis=request.metadata.get("placeholder_analysis", ""),
+            auxiliary_outputs={"placeholder": True},
+            model_name="vision-placeholder",
+            model_version="v1",
+        )
 
-            prepared_audio = Path(temp_dir) / "prepared.wav"
-            prepared_audio.write_bytes(b"audio")
-            with patch(
-                "depression_detection.preprocessing.transcription.service.prepare_audio_for_transcription",
-                return_value=prepared_audio,
-            ):
-                result = workflow.submit_qa_capture(
-                    session.session_id,
-                    1,
-                    b"video-bytes",
-                    "capture.webm",
-                    "video/webm",
-                )
+    def predict_audio(self, request):
+        return PredictionResult(
+            sample_id=request.sample_id,
+            task_type=request.task_type,
+            modality=Modality.AUDIO,
+            label=PredictionLabel.UNCERTAIN,
+            score=0.0,
+            confidence=0.0,
+            evidence=[request.audio_path],
+            analysis=request.metadata.get("placeholder_analysis", ""),
+            auxiliary_outputs={"placeholder": True},
+            model_name="audio-placeholder",
+            model_version="v1",
+        )
+
+
+class _DummyInterviewAnalysisService:
+    def __init__(self):
+        self.enqueued: list[tuple[str, int]] = []
+
+    def enqueue_qa_analysis(self, session_id: str, question_id: int):
+        self.enqueued.append((session_id, question_id))
+
+    def build_stage_placeholder_result(self, sample_id: str, task_type: TaskType, modality: Modality, evidence_path: str, analysis: str):
+        return _DummyPredictionService().predict_vision(
+            Mock(sample_id=sample_id, task_type=task_type, modality=modality, video_path=evidence_path, metadata={"placeholder_analysis": analysis})
+        ) if modality == Modality.VISION else _DummyPredictionService().predict_audio(
+            Mock(sample_id=sample_id, task_type=task_type, modality=modality, audio_path=evidence_path, metadata={"placeholder_analysis": analysis})
+        )
+
+
+class InterviewWorkflowServiceTests(unittest.TestCase):
+    def test_submit_qa_capture_queues_background_analysis_and_archives_capture(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            settings = RuntimeSettings(interview_archive_root=temp_dir, keep_temp_files=False)
+            archive_service = ArchiveService(settings)
+            analysis_service = _DummyInterviewAnalysisService()
+            workflow = SessionWorkflowService(archive_service, _DummyPredictionService(), analysis_service, settings)
+            session = archive_service.create_or_load_session("session-demo")
+            result = workflow.submit_qa_capture(
+                session.session_id,
+                1,
+                b"video-bytes",
+                "capture.webm",
+                "video/webm",
+            )
 
             qa_dir = Path(temp_dir) / session.session_id / "qa" / "q01"
             self.assertTrue((qa_dir / "capture.webm").exists())
-            self.assertTrue((qa_dir / "audio.wav").exists())
-            self.assertTrue((qa_dir / "transcript.json").exists())
             self.assertTrue((qa_dir / "diagnosis.json").exists())
-            self.assertEqual(result.record.diagnosis.status, "completed")
-            self.assertEqual(result.record.artifacts.audio, "qa/q01/audio.wav")
-            self.assertEqual(result.record.artifacts.transcript, "qa/q01/transcript.json")
+            self.assertEqual(result.record.diagnosis.status, "queued")
+            self.assertEqual(analysis_service.enqueued, [("session-demo", 1)])
 
-            transcript_text = (qa_dir / "transcript.json").read_text(encoding="utf-8")
-            self.assertIn('"provider": "whisper"', transcript_text)
-            self.assertIn('"prepared_audio_path": "qa/q01/audio.wav"', transcript_text)
-
-    def test_submit_movie_capture_can_archive_even_when_model_is_pending(self):
+    def test_submit_movie_capture_returns_completed_placeholder_result(self):
         with tempfile.TemporaryDirectory() as temp_dir:
-            settings = RuntimeSettings(interview_archive_root=temp_dir, media_temp_dir=temp_dir)
-            workflow = SessionWorkflowService(ArchiveService(settings), _DummyQAService(), None, settings)
+            settings = RuntimeSettings(interview_archive_root=temp_dir)
+            workflow = SessionWorkflowService(ArchiveService(settings), _DummyPredictionService(), _DummyInterviewAnalysisService(), settings)
             session = workflow.create_session().session
 
             result = workflow.submit_movie_capture(
@@ -94,7 +118,8 @@ class InterviewWorkflowServiceTests(unittest.TestCase):
                 "video/webm",
             )
 
-            self.assertEqual(result.record.diagnosis.status, "pending_model")
+            self.assertEqual(result.record.diagnosis.status, "completed")
+            self.assertIn("暂不进行抑郁识别分析", result.record.diagnosis.result["analysis"])
             self.assertTrue((Path(temp_dir) / session.session_id / "movie" / "positive" / "capture.webm").exists())
 
 

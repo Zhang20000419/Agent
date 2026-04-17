@@ -74,7 +74,7 @@ class TranscriptionServiceTests(unittest.TestCase):
                 service.transcribe_audio(tmp.name)
 
     def test_inline_audio_payload_is_written_then_transcribed(self):
-        settings = RuntimeSettings(transcription_enabled=True, keep_temp_files=False, media_temp_dir=".cache/test-media")
+        settings = RuntimeSettings(transcription_enabled=True, keep_temp_files=False)
         primary = _PrimaryTranscriber()
         service = TranscriptionService(settings, primary, None)
 
@@ -97,7 +97,7 @@ class TranscriptionServiceTests(unittest.TestCase):
 
     def test_persisted_prepared_audio_path_overrides_temp_metadata(self):
         with tempfile.TemporaryDirectory() as temp_dir:
-            settings = RuntimeSettings(transcription_enabled=True, keep_temp_files=False, media_temp_dir=temp_dir)
+            settings = RuntimeSettings(transcription_enabled=True, keep_temp_files=False)
             primary = _PrimaryTranscriber()
             service = TranscriptionService(settings, primary, None)
             source = Path(temp_dir) / "capture.webm"
