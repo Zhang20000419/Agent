@@ -4,28 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="dde4f5f7-39f1-49fc-a4cd-4137cbc0f2c1" name="Changes" comment="V1.0">
+    <list default="true" id="dde4f5f7-39f1-49fc-a4cd-4137cbc0f2c1" name="Changes" comment="多模态抑郁识别：实现了前端通过摄像头采集视频并且上传，后端调用本地和远程服务实现文字转录以及基于文本的抑郁识别，音视频目前仅占位。">
+      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/interview/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/movie/negative/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/movie/neutral/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/movie/positive/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/reading/negative/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/reading/neutral/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/interview-assets/reading/positive/.gitkeep" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/agent_service.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/interview_questions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/interview_questions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/llm_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/llm_config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/prompts.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/static/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/static/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/interview_questions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/interview_questions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/llm_config.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/main.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/prompts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/schemas.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/app/static/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/cli.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/main.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/depression_interview_demo/requirements.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_session_summary_reuse.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_session_summary_reuse.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,6 +38,11 @@
     </persistenceIdMap>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
@@ -61,24 +66,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.main.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "multimodal",
+    "last_opened_file_path": "/Users/enchanted/PycharmProjects/PythonProject/app/static/interview-assets/interview",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app/static/interview-assets/interview" />
+      <recent name="$PROJECT_DIR$/app/static/interview-assets/reading/negative" />
+      <recent name="$PROJECT_DIR$/app/static/interview-assets/reading/neutral" />
+      <recent name="$PROJECT_DIR$/app/static/interview-assets/reading/positive" />
+      <recent name="$PROJECT_DIR$/app/static/interview-assets/movie/negative" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>

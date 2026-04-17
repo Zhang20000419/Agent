@@ -1,33 +1,277 @@
 # Mental Interview Demo
 
-一个用于演示“固定 14 题访谈 + 大模型结构化分析 + 结果复核 + 整场汇总”的原型项目。
+一个用于演示“电影观看 + 朗读文字 + 回答问题”三阶段访谈与多模态分析的原型项目。
 
-它的目标是把受试者的自然语言回答转换成稳定的结构化结果，便于前端展示、接口联调和流程验证。项目输出的是风险分层和症状线索总结，不是临床诊断结果。
+完整业务流程是：
+
+1. 受试者观看正性 / 中性 / 负性的三段电影，采集受试者视频，诊断时仅使用**视觉数据**
+2. 受试者朗读正性 / 中性 / 负性的三段文字，诊断时使用**视觉 + 音频数据**
+3. 受试者回答固定的 **16 个问题**，诊断时使用**视觉 + 音频 + 文本数据**；其中文本不是手工输入，而是由音频转录得到
+
+它的目标是把受试者在整个访谈过程中的多模态行为数据转换成稳定的结构化结果，便于前端展示、接口联调、流程验证和后续模型落地。项目输出的是风险分层和症状线索总结，不是临床诊断结果。
+
+> 说明：当前仓库仍保留一个以静态资源题库驱动的 QA 兼容页面，用于验证现有 API 和后端分析链路；README 同时记录**完整目标流程**与**当前 demo 实现状态**。
 
 ## 项目能做什么
 
-- 按固定 14 个问题进行访谈
-- 对每一题回答输出结构化分析结果
+- 用 `movie / reading / qa` 三个任务层表达完整访谈协议
+- 对单题 / 单阶段输入输出结构化分析结果
 - 用“抽取 -> 复核 -> 裁决”的多阶段流程降低幻觉和过度推断
 - 在全部回答结束后，输出整场访谈的综合总结
 - 提供 Web 页面和 CLI 两种演示入口
 
+## 完整业务流程（目标访谈协议）
+
+### 阶段 1：观看电影（Movie）
+
+- 受试者依次观看 **正性 / 中性 / 负性** 三段电影
+- 前端通过**摄像头 + 麦克风**持续采集受试者视频并传回后端
+- 这个阶段建模时**仅使用视觉模态**
+- 音频即使被一并采集，也只作为采集载体或归档内容，不作为该阶段的诊断输入
+
+### 阶段 2：朗读文字（Reading）
+
+- 受试者依次朗读 **正性 / 中性 / 负性** 三段文字
+- 前端继续通过**摄像头 + 麦克风**采集受试者视频和音频并传回后端
+- 这个阶段建模时使用**视觉 + 音频**
+- 是否保留文本稿件属于任务素材管理问题，不影响该阶段的核心输入模态定义
+
+### 阶段 3：回答问题（QA）
+
+- 受试者依次回答固定的 **16 个问题**
+- 前端继续通过**摄像头 + 麦克风**采集受试者视频和音频并传回后端
+- 这个阶段建模时使用**视觉 + 音频 + 文本**
+- 其中“文本”不是前端直接输入，而是由该题音频经转录后得到，作为 QA 阶段的文本模态输入
+
+### 前端采集约定
+
+- 前端统一使用**摄像头和麦克风**采集受试者视频数据，再上传到后端
+- 页面需要像文本版一样持续展示：
+  - 当前阶段
+  - 当前题目 / 当前刺激材料
+  - 已完成进度
+  - 历史回看
+- 对于 QA 阶段，前端需要像之前的文本版一样展示问题本身，但回答来源改为受试者的真实音视频采集
+
+### 后端归档与存储约定
+
+后端应将每次访谈的原始媒体、派生音频、转录文本和诊断结果统一存放到一个**可配置的访谈归档根目录**中。配置入口应放在统一配置层（当前仓库配置集中在 `src/depression_detection/config/settings.py`；现有相关目录配置包括 `MEDIA_TEMP_DIR` 与 `TRANSCRIPT_CACHE_DIR`，后续可进一步收敛为单一访谈归档根目录配置）。
+
+建议的归档原则：
+
+- 访谈归档根目录下，每次访谈创建一个新的子文件夹
+- 每个子文件夹对应一次完整访谈，例如：
+  - `session-20260417-130501-abcd1234/`
+  - `interview-<timestamp>-<uuid>/`
+- 该子文件夹下分别存放：
+  - 观看电影阶段的视频
+  - 朗读文字阶段的视频
+  - 回答问题阶段的视频
+  - 如有需要，从视频中分离出的音频
+  - 如有需要，转录生成的文本
+  - 诊断结果与元数据
+
+推荐目录结构示例：
+
+```text
+interview_archive_root/
+└── session-20260417-130501-abcd1234/
+    ├── session.json
+    ├── movie/
+    │   ├── positive/
+    │   │   ├── capture.webm
+    │   │   └── diagnosis.json
+    │   ├── neutral/
+    │   │   ├── capture.webm
+    │   │   └── diagnosis.json
+    │   └── negative/
+    │       ├── capture.webm
+    │       └── diagnosis.json
+    ├── reading/
+    │   ├── positive/
+    │   │   ├── capture.webm
+    │   │   ├── audio.wav
+    │   │   └── diagnosis.json
+    │   ├── neutral/
+    │   └── negative/
+    └── qa/
+        ├── q01/
+        │   ├── capture.webm
+        │   ├── audio.wav
+        │   ├── transcript.json
+        │   └── diagnosis.json
+        ├── q02/
+        └── ...
+```
+
+目录规则上：
+
+- `movie` 和 `reading` 阶段可以按 `positive / neutral / negative` 分文件夹
+- `qa` 阶段可以按 `q01 ~ q16` 分文件夹
+- 也可以统一为更抽象的层级，例如都使用 `item-01 / item-02 / ...`
+- **关键要求不是具体命名，而是三阶段采用统一、稳定、可追溯的目录规则**
+
+### 转录来源标记约定
+
+由于转录可能来自两个来源，因此转录文件必须显式标注文本来源，至少应保存以下信息：
+
+- `provider`: `whisper` 或 `baidu`
+- `used_fallback`: 是否发生兜底
+- `language`: 转录语言
+- `confidence`: 可用时保存置信度
+- `metadata.primary_error`: 如果本地 Whisper 失败后回退百度云，可记录主路径错误
+
+推荐把转录结果单独保存为 `transcript.json`，例如：
+
+```json
+{
+  "text": "最近两周心情不太稳定，有时候会低落。",
+  "provider": "whisper",
+  "used_fallback": false,
+  "language": "zh",
+  "confidence": 0.91,
+  "metadata": {
+    "prepared_audio_path": "qa/q03/audio.wav"
+  }
+}
+```
+
+如果是百度云兜底得到的文本，则应明确表现为：
+
+```json
+{
+  "text": "最近两周心情不太稳定，有时候会低落。",
+  "provider": "baidu",
+  "used_fallback": true,
+  "language": "zh",
+  "metadata": {
+    "primary_error": "whisper timeout"
+  }
+}
+```
+
 ## 项目结构
+
+当前仓库已经从单体 demo 结构演进为“**兼容层 + 标准 src 分层结构**”：
 
 ```text
 depression_interview_demo/
-├── main.py                 # 启动 FastAPI 服务
-├── cli.py                  # 命令行演示入口
+├── main.py                 # 启动 FastAPI 服务（兼容入口）
+├── cli.py                  # 命令行演示入口（兼容入口）
+├── pyproject.toml
 ├── requirements.txt
-└── app/
-    ├── main.py             # HTTP 路由与静态页面入口
-    ├── pipeline.py         # 单题分析、复核裁决、整场汇总主流程
-    ├── schemas.py          # Pydantic 数据模型
-    ├── interview_questions.py
-    ├── prompts.py          # 各代理使用的系统提示词
-    ├── llm_config.py       # 模型与环境变量配置
-    └── static/index.html   # 前端演示页面
+├── app/                    # 旧 API / 旧 CLI 的兼容封装
+│   ├── main.py
+│   ├── pipeline.py
+│   └── static/index.html
+├── src/
+│   └── depression_detection/
+│       ├── bootstrap/      # 容器与服务组装
+│       ├── config/         # 模型/环境配置
+│       ├── domain/         # 稳定领域契约
+│       ├── model/          # vision/audio/text/multimodal 模型层
+│       ├── tasks/          # qa / reading / movie 任务编排
+│       ├── application/    # 对外服务外观层
+│       ├── interfaces/     # FastAPI / CLI 适配层
+│       └── shared/
+├── tests/
+│   ├── unit/
+│   ├── contract/
+│   └── integration/
+├── docs/
+└── scripts/
 ```
+
+### 模型层说明
+
+`src/depression_detection/model/` 现在提供统一的抑郁预测接口：
+
+- `text`
+- `audio`
+- `vision`
+- `multimodal`
+
+其中：
+- `text` 已提供可落地的 LLM predictor 接口封装；
+- `audio / vision / multimodal` 已提供标准接口与占位实现，后续可直接替换为本地训练模型。
+
+### 任务层说明
+
+- `qa`：当前已落地的回答问题抑郁识别主链路
+- `reading`：朗读文字任务骨架
+- `movie`：看电影任务骨架
+
+前端兼容页已补上 QA 真上传能力；旧接口继续可用；新代码优先写入 `src/depression_detection/`。
+
+### 当前代码实现状态
+
+当前兼容 demo 实际处于**问答阶段（QA）**：
+
+- QA 阶段继续使用文本抑郁识别主链路
+- QA 阶段已支持：`录音/录屏 multipart 上传 / answer_audio_base64 -> Whisper 转写 -> 百度云 ASR 兜底 -> 文本抑郁识别`
+- `movie` 和 `reading` 当前**不使用文本模态数据**
+- 因此当前版本**仅在 QA 阶段落地媒体转文本**
+- 但 Whisper / 百度云 ASR / ffmpeg / fallback 等开关已经预留到统一配置中，供后续阶段启用
+
+统一配置入口为：
+
+```text
+src/depression_detection/config/settings.py
+```
+
+`model_settings.py` 仅保留兼容导出。
+
+### QA 媒体输入说明
+
+`/api/analyze-turn` 与 `/api/v1/qa/turns:predict` 现在支持真正的 multipart 媒体上传，同时保留 JSON 兼容模式：
+
+1. 真正的录音 / 录屏文件上传（推荐）：
+
+```bash
+curl -X POST http://127.0.0.1:8090/api/analyze-turn \
+  -F question_id=6 \
+  -F answer_audio=@answer.webm
+```
+
+2. 直接文本：
+
+```json
+{
+  "question_id": 6,
+  "answer": "最近两周情绪比较低落。"
+}
+```
+
+3. JSON 兼容媒体直传：
+
+```json
+{
+  "question_id": 6,
+  "answer": "",
+  "answer_audio_base64": "<base64-audio>",
+  "answer_audio_filename": "answer.wav",
+  "answer_audio_content_type": "audio/wav"
+}
+```
+
+4. 本地 demo / internal 兼容媒体路径：
+
+```json
+{
+  "question_id": 6,
+  "answer": "",
+  "answer_audio_path": "/path/to/answer.wav"
+}
+```
+
+当 `answer` 为空且提供了上传文件 / `answer_audio_base64`（或仅在本地 demo 下提供 `answer_audio_path`）时，后端会：
+
+1. 用 ffmpeg 规范化媒体并抽取音频
+2. 先尝试 Whisper 转写
+3. Whisper 失败时按配置回退百度云 ASR
+4. 将转写文本送入现有 QA 文本抑郁识别流程
+
+> 说明：`answer_audio_path` 是 **local-only/internal compatibility** 字段。真实前后端分离部署建议优先使用 multipart 真上传；录屏文件也可以直接上传，只要 ffmpeg 能读取其音轨即可。如果客户端环境受限，再退回 `answer_audio_base64`。生产环境建议将 `ALLOW_LOCAL_AUDIO_PATH_INPUT=false`。
 
 ## 核心流程
 
@@ -65,7 +309,7 @@ depression_interview_demo/
 - `analyze_session` 优先复用已有 `turns` 做整场分类；只有兼容模式下才会从 `responses` 补跑逐题分析
 - 最终总结的输入是前面所有题目的结构化分析结果，不是原始问答直接拼接
 
-## 固定 14 题
+## 当前 demo 题库（来自静态资源目录，当前为 16 题）
 
 1. 你今天过得怎么样？
 2. 你的家乡是哪里的？
@@ -81,6 +325,8 @@ depression_interview_demo/
 12. 有没有哪段时间，连续几天持续地感到烦躁易怒，以至于与人争论，吵架或打架，或者对着外人大吼？有的话，请你仔细讲一下。
 13. 有没有哪段时间，你总喜欢滔滔不绝地讲话，说话快得让人难以理解？有的话，请你仔细讲一下。
 14. 好的。有没有哪段时间，你觉得自己思维比以往格外活跃，脑子格外聪明？有的话，请你仔细讲一下。
+15. 谢谢。有没有哪段时间，你认为有人在暗中监视你、故意议论你或企图伤害你吗？有的话，请你仔细讲一下。
+16. 好的。有没有哪段时间，你能听到其他人不能听到的声音，或者看到别人看不到的东西？有的话，请你仔细讲一下。
 
 ## 数据模型
 
@@ -281,7 +527,7 @@ conda run -n agent python cli.py
 
 - `GET /`：前端演示页面
 - `GET /health`：健康检查
-- `GET /api/questions`：固定 14 题列表
+- `GET /api/questions`：当前 demo 的题库列表（从 `app/static/interview-assets/interview/` 动态加载）
 - `POST /api/analyze-turn`：单题分析
 - `POST /api/analyze-session`：整场访谈汇总
 
@@ -312,14 +558,14 @@ conda run -n agent python cli.py
 }
 ```
 
-## 前端页面行为
+## 当前兼容前端页面行为
 
 前端页面会：
 
-1. 按顺序展示 14 个固定问题
+1. 按顺序展示当前 demo 题库中的所有问题（当前为 16 题）
 2. 每提交一题，立即调用 `POST /api/analyze-turn`
 3. 不额外插入人为停顿，页面节奏直接反映模型请求的真实耗时
-4. 第 14 题完成后，自动调用 `POST /api/analyze-session`，并把前面收集到的 `TurnAnalysis` 一并提交
+4. 最后一题完成后，自动调用 `POST /api/analyze-session`，并把前面收集到的 `TurnAnalysis` 一并提交
 5. 展示整场分类、时间线和汇总信息
 
 页面还包含：
@@ -336,6 +582,7 @@ conda run -n agent python cli.py
 - 这是演示原型，不是医疗产品
 - 输出质量依赖提示词设计、模型稳定性和回答质量
 - 当前题库既包含背景信息，也包含情绪、焦虑、迟滞和轻躁相关线索，不是严格的单一抑郁量表
+- README 顶部描述的“三阶段完整流程、16 题 QA、统一访谈归档目录”是系统目标流程；当前仓库已落地的兼容 demo 仍主要围绕 QA 路由展开，但题目数量已改为从静态资源目录动态读取
 - 当前没有持久化、鉴权、审计日志和正式评估数据集
 - 当前整场接口会信任客户端回传的 `turns`；这适用于 demo / 受信任调用方，不适合作为生产环境的最终安全方案
 

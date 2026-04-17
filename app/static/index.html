@@ -3,22 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>心理访谈工作台</title>
+  <title>抑郁在线识别</title>
   <style>
     :root {
-      --bg: #ecf1f7;
-      --panel: rgba(255, 255, 255, 0.88);
-      --panel-strong: #ffffff;
-      --line: rgba(20, 34, 57, 0.12);
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --line: rgba(19, 34, 56, 0.12);
       --text: #132238;
-      --muted: #62758a;
+      --muted: #667a8f;
       --accent: #1d63d6;
-      --accent-soft: rgba(29, 99, 214, 0.12);
-      --good: #11875f;
+      --good: #15845f;
       --warn: #bb7a16;
       --risk: #c24c4c;
-      --ink: #142239;
-      --shadow: 0 18px 48px rgba(19, 34, 56, 0.1);
+      --shadow: 0 18px 48px rgba(19, 34, 56, 0.08);
       --radius: 22px;
     }
 
@@ -28,17 +25,14 @@
       margin: 0;
       min-height: 100vh;
       color: var(--text);
-      font-family: "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(29, 99, 214, 0.08), transparent 24%),
-        radial-gradient(circle at right 18%, rgba(17, 135, 95, 0.08), transparent 24%),
-        linear-gradient(180deg, #f6f8fb 0%, #ebf0f6 100%);
+      background: linear-gradient(180deg, #f7f9fc 0%, #edf2f8 100%);
+      font-family: "SF Pro Display", "PingFang SC", sans-serif;
     }
 
     .page {
-      width: min(1480px, calc(100% - 26px));
+      width: min(1380px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 22px 0 38px;
+      padding: 20px 0 28px;
     }
 
     .hero {
@@ -48,17 +42,18 @@
       margin-bottom: 18px;
     }
 
-    .card {
-      border: 1px solid var(--line);
-      background: var(--panel);
-      backdrop-filter: blur(16px);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      align-items: start;
     }
 
-    .hero-main,
-    .hero-side,
-    .panel {
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       padding: 22px;
     }
 
@@ -66,1032 +61,703 @@
       display: inline-flex;
       padding: 8px 12px;
       border-radius: 999px;
-      background: var(--accent-soft);
+      background: rgba(29, 99, 214, 0.12);
       color: var(--accent);
       font-size: 12px;
       font-weight: 800;
-      text-transform: uppercase;
       letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
     h1 {
       margin: 16px 0 10px;
-      font-size: clamp(32px, 5vw, 58px);
+      font-size: clamp(34px, 5vw, 58px);
       line-height: 0.96;
       letter-spacing: -0.04em;
     }
 
-    .hero-main p {
-      margin: 0;
-      max-width: 50ch;
-      color: var(--muted);
-      line-height: 1.78;
-      font-size: 15px;
-    }
+    h2 { margin: 0; font-size: clamp(28px, 4vw, 42px); line-height: 1.18; }
 
-    .hero-side {
-      display: grid;
-      gap: 12px;
-      align-content: center;
-    }
+    p { margin: 0; line-height: 1.72; }
+
+    .muted { color: var(--muted); }
 
     .meta-row {
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      padding-bottom: 12px;
+      padding: 12px 0;
       border-bottom: 1px solid var(--line);
       color: var(--muted);
       font-size: 14px;
     }
 
-    .meta-row:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
-    }
+    .meta-row:last-child { border-bottom: 0; }
+    .meta-row strong { color: var(--text); }
 
-    .meta-row strong {
-      color: var(--ink);
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 300px 420px 1fr;
-      gap: 18px;
-      align-items: stretch;
-      height: min(760px, calc(100vh - 220px));
-    }
-
-    .stack {
-      display: grid;
-      gap: 18px;
-      height: 100%;
-      min-height: 0;
-    }
-
-    .layout > .stack:first-child {
-      grid-template-rows: minmax(240px, 0.82fr) minmax(280px, 1.18fr);
-      align-content: start;
-    }
-
-    .layout > .stack:nth-child(2),
-    .layout > .stack:nth-child(3) {
-      grid-template-rows: minmax(0, 1fr);
-    }
-
-    .stack > .card.panel {
-      height: 100%;
-      min-height: 0;
+    .main-panel {
+      min-height: calc(100vh - 190px);
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-    }
-
-    .panel h2 {
-      margin: 0 0 14px;
-      font-size: 18px;
-    }
-
-    .status {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--warn);
-      box-shadow: 0 0 0 6px rgba(187, 122, 22, 0.12);
-    }
-
-    .status-dot.live {
-      background: var(--good);
-      box-shadow: 0 0 0 6px rgba(17, 135, 95, 0.12);
-    }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .stat-box {
-      padding: 14px;
-      border-radius: 16px;
-      background: #f6f9fc;
-      border: 1px solid rgba(20, 34, 57, 0.08);
-    }
-
-    .stat-label {
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-weight: 700;
-    }
-
-    .stat-value {
-      margin-top: 6px;
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--ink);
-    }
-
-    .progress-wrap {
-      margin-top: 14px;
-    }
-
-    .progress-header {
-      display: flex;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 8px;
-      color: var(--muted);
-      font-size: 13px;
+      gap: 18px;
     }
 
-    .progress-bar {
-      width: 100%;
-      height: 10px;
+    .phase-badge {
+      display: inline-flex;
+      align-self: start;
+      padding: 7px 11px;
       border-radius: 999px;
-      background: #dfe7f0;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      width: 0;
-      height: 100%;
-      background: linear-gradient(90deg, #1d63d6, #65a0ff);
-      transition: width 0.25s ease;
-    }
-
-    .question-list {
-      display: grid;
-      gap: 8px;
-      flex: 1;
-      min-height: 0;
-      align-content: start;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .question-item {
-      width: 100%;
-      text-align: left;
-      border: 1px solid rgba(20, 34, 57, 0.08);
-      border-radius: 16px;
-      background: #f9fbfd;
-      padding: 12px 14px;
-      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
-      cursor: pointer;
-    }
-
-    .question-item.current {
-      border-color: rgba(29, 99, 214, 0.4);
-      background: rgba(29, 99, 214, 0.08);
-      transform: translateY(-1px);
-    }
-
-    .question-item.done {
-      border-color: rgba(17, 135, 95, 0.24);
-      background: rgba(17, 135, 95, 0.06);
-    }
-
-    .question-item.inspected {
-      box-shadow: inset 0 0 0 1px rgba(19, 34, 56, 0.18);
-    }
-
-    .question-item-index {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 6px;
-    }
-
-    .question-item-text {
-      font-size: 13px;
-      line-height: 1.55;
-      color: var(--ink);
-    }
-
-    .review-box {
-      flex: 1;
-      min-height: 0;
-      overflow: auto;
-      padding: 16px;
-      border-radius: 18px;
-      background: #f7fafc;
-      border: 1px solid rgba(20, 34, 57, 0.08);
-    }
-
-    .review-box h3 {
-      margin: 0 0 10px;
-      font-size: 16px;
-    }
-
-    .review-block {
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .review-block strong {
-      color: var(--ink);
-    }
-
-    .question-box {
-      padding: 18px;
-      border-radius: 18px;
-      background: linear-gradient(180deg, #f8fbff, #f2f7fd);
-      border: 1px solid rgba(29, 99, 214, 0.12);
-    }
-
-    .question-index {
+      background: rgba(29, 99, 214, 0.1);
+      color: var(--accent);
       font-size: 12px;
       font-weight: 800;
-      color: var(--accent);
-      text-transform: uppercase;
       letter-spacing: 0.06em;
-      margin-bottom: 8px;
+      text-transform: uppercase;
     }
 
-    .question-text {
+    .content-subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.78;
+      white-space: pre-line;
+    }
+
+    .content-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 360px;
+    }
+
+    .countdown-wrap {
+      text-align: center;
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+    }
+
+    .countdown-number {
+      width: 148px;
+      height: 148px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(29, 99, 214, 0.1), rgba(29, 99, 214, 0.18));
+      color: var(--accent);
+      font-size: 58px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+    }
+
+    .stage-video {
+      width: min(100%, 860px);
+      max-height: 64vh;
+      border-radius: 22px;
+      background: #101b2b;
+      box-shadow: 0 18px 40px rgba(10, 21, 38, 0.24);
+    }
+
+    .text-card,
+    .question-card,
+    .completion-card {
+      width: min(100%, 900px);
+      padding: 26px;
+      border-radius: 22px;
+      border: 1px solid rgba(29, 99, 214, 0.1);
+      background: linear-gradient(180deg, #f8fbff, #f2f7fd);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
+    }
+
+    .text-card pre,
+    .question-card pre {
       margin: 0;
-      font-size: 18px;
-      line-height: 1.65;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 160px;
-      margin-top: 14px;
-      padding: 16px 18px;
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      resize: vertical;
-      background: #fff;
-      color: var(--ink);
+      white-space: pre-wrap;
+      word-break: break-word;
       font: inherit;
-      line-height: 1.7;
+      font-size: 24px;
+      line-height: 1.9;
+      color: var(--text);
     }
 
-    textarea:focus {
-      outline: none;
-      border-color: rgba(29, 99, 214, 0.38);
-      box-shadow: 0 0 0 4px rgba(29, 99, 214, 0.08);
+    .question-card pre { font-size: 28px; line-height: 1.7; }
+
+    .small-label {
+      margin-bottom: 12px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
     .actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
+      justify-content: center;
       gap: 12px;
-      margin-top: 14px;
-    }
-
-    .actions.secondary-row {
-      grid-template-columns: 1fr 1fr;
-      margin-top: 12px;
+      min-height: 58px;
     }
 
     button {
       border: 0;
       border-radius: 16px;
-      padding: 14px 18px;
+      padding: 14px 24px;
       font: inherit;
       font-weight: 800;
       cursor: pointer;
       transition: transform 0.18s ease, opacity 0.18s ease;
     }
 
-    button:hover:not(:disabled) {
-      transform: translateY(-1px);
-    }
+    button:hover:not(:disabled) { transform: translateY(-1px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .primary { background: linear-gradient(135deg, #1a57bf, #1d63d6); color: #fff; }
+    .ghost { background: #edf3fa; color: var(--text); }
 
-    .primary {
-      color: white;
-      background: linear-gradient(135deg, #1a57bf, #1d63d6);
-    }
-
-    .ghost {
-      color: var(--ink);
-      background: #edf3fa;
-    }
-
-    .accent {
-      color: white;
-      background: linear-gradient(135deg, #0d835a, #1da26c);
-    }
-
-    .hint {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.65;
-    }
-
-    .feed {
+    .side-panel {
       display: grid;
-      gap: 14px;
-      flex: 1;
-      min-height: 0;
-      overflow: auto;
-      padding-right: 4px;
+      gap: 18px;
     }
 
-    .result-card {
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      background: var(--panel-strong);
-      padding: 18px;
+    .camera-preview {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      border-radius: 18px;
+      background: #0e1828;
+      object-fit: cover;
+      transform: scaleX(-1);
     }
 
-    .result-card.summary-card {
-      border-color: rgba(29, 99, 214, 0.18);
-      background: linear-gradient(180deg, #ffffff, #f7fbff);
+    .status-grid {
+      display: grid;
+      gap: 10px;
     }
 
-    .result-top {
+    .status-row {
       display: flex;
       justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 10px;
-      align-items: start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
     }
 
-    .result-top h3 {
-      margin: 0;
-      font-size: 16px;
-      line-height: 1.45;
+    .status-row:last-child { border-bottom: 0; }
+
+    .status-row strong {
+      text-align: right;
+      color: var(--text);
+      word-break: break-word;
     }
 
-    .result-label {
-      font-size: 11px;
-      font-weight: 800;
+    .recording-indicator {
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
       color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 6px;
+      font-size: 13px;
     }
 
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 12px 0;
+    .recording-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--warn);
+      box-shadow: 0 0 0 6px rgba(185, 119, 23, 0.14);
     }
 
-    .pill {
-      padding: 7px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      background: #eef4fb;
-      color: var(--ink);
+    .recording-dot.live {
+      background: var(--risk);
+      box-shadow: 0 0 0 6px rgba(194, 76, 76, 0.14);
     }
 
-    .pill.risk { background: rgba(194, 76, 76, 0.12); color: var(--risk); }
-    .pill.safe { background: rgba(17, 135, 95, 0.12); color: var(--good); }
-    .pill.warn { background: rgba(187, 122, 22, 0.12); color: var(--warn); }
-
-    .result-block { margin-top: 12px; }
-
-    .evidence-list,
-    .summary-list {
-      margin: 0;
-      padding-left: 18px;
+    .note-box {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #f5f8fb;
+      color: var(--muted);
+      font-size: 13px;
       line-height: 1.7;
-      color: var(--ink);
+      white-space: pre-line;
     }
 
-    .summary-hero {
-      display: grid;
-      grid-template-columns: 1fr 180px;
-      gap: 14px;
-      align-items: start;
-    }
+    .hidden { display: none !important; }
 
-    .summary-score {
-      padding: 18px;
-      border-radius: 18px;
-      background: #f0f6ff;
-      text-align: center;
-    }
-
-    .summary-score strong {
-      display: block;
-      font-size: 30px;
-      line-height: 1;
-      margin-top: 6px;
-    }
-
-    @media (max-width: 1280px) {
-      .layout {
-        grid-template-columns: 280px 1fr;
-        height: auto;
-      }
-
-      .layout > .stack:nth-child(2) {
-        grid-column: span 1;
-      }
-
-      .layout > .stack:nth-child(3) {
-        grid-column: 1 / -1;
-      }
-    }
-
-    @media (max-width: 980px) {
+    @media (max-width: 1180px) {
       .hero,
-      .layout {
-        grid-template-columns: 1fr;
-        height: auto;
-      }
-
-      .feed,
-      .question-list {
-        max-height: none;
-      }
+      .workspace { grid-template-columns: 1fr; }
+      .main-panel { min-height: auto; }
     }
   </style>
 </head>
 <body>
   <main class="page">
     <section class="hero">
-      <article class="card hero-main">
-        <span class="eyebrow">高敏感访谈原型</span>
-        <h1>心理访谈工作台</h1>
-        <p>页面提供手动访谈和自动演示两种模式。每次回答都会立即显示结构化识别结果；全部问题结束后，系统会自动输出整场分类、关键线索和可解释信息。</p>
+      <article class="card">
+        <span class="eyebrow">抑郁在线识别</span>
+        <h1>三阶段自助检测工作台</h1>
+        <p class="muted">页面会按 <strong>看电影 → 朗读文字 → 访谈问答</strong> 的顺序自动推进。展示正式内容时会自动开始录制；电影结束后自动停止，朗读和问答由用户点击按钮进入下一步。摄像头采集画面始终显示在右侧，保持较小尺寸。</p>
       </article>
-      <aside class="card hero-side">
-        <div class="meta-row"><span>服务地址</span><strong>http://127.0.0.1:8090</strong></div>
-        <div class="meta-row"><span>访谈形式</span><strong>14 轮固定问题</strong></div>
-        <div class="meta-row"><span>输出内容</span><strong>逐题结构化结果 + 整场总结</strong></div>
-        <div class="meta-row"><span>运行模式</span><strong>手动访谈 / 自动演示</strong></div>
+      <aside class="card">
+        <div class="meta-row"><span>内容来源</span><strong>统一静态资源清单</strong></div>
+        <div class="meta-row"><span>看电影</span><strong>positive / neutral / negative</strong></div>
+        <div class="meta-row"><span>朗读文字</span><strong>从静态文本读取</strong></div>
+        <div class="meta-row"><span>访谈问答</span><strong>题目数动态读取</strong></div>
       </aside>
     </section>
 
-    <section class="layout">
-      <div class="stack">
-        <div class="card panel">
-          <h2>访谈目录</h2>
-          <div id="question-list" class="question-list"></div>
+    <section class="workspace">
+      <section class="card main-panel">
+        <div>
+          <div id="phase-badge" class="phase-badge">准备中</div>
+          <h2 id="content-title">正在初始化流程</h2>
+          <p id="content-subtitle" class="content-subtitle">正在连接摄像头、麦克风并加载静态资源清单，请稍候。</p>
         </div>
-        <div class="card panel">
-          <h2>历史回看</h2>
-          <div id="review-panel" class="review-box">
-            <h3>当前还没有可回看的回答</h3>
-            <div class="review-block">完成题目后，点击左侧目录中的已完成问题，可以查看当时的回答和分析结果。</div>
-          </div>
+
+        <div id="content-body" class="content-body"></div>
+
+        <div class="actions">
+          <button id="primary-btn" class="primary hidden" type="button"></button>
         </div>
-      </div>
+      </section>
 
-      <div class="stack">
-        <div class="card panel">
-          <div class="status">
-            <span id="status-dot" class="status-dot"></span>
-            <span id="status-text">正在检查后端...</span>
+      <aside class="side-panel">
+        <article class="card">
+          <div class="small-label">摄像头采集</div>
+          <video id="camera-preview" class="camera-preview" autoplay muted playsinline></video>
+          <div class="recording-indicator">
+            <span id="recording-dot" class="recording-dot"></span>
+            <span id="recording-text">等待摄像头授权...</span>
           </div>
+          <button id="camera-retry-btn" class="ghost hidden" type="button">重新连接摄像头 / 麦克风</button>
+        </article>
 
-          <div class="stat-grid">
-            <div class="stat-box">
-              <div class="stat-label">已完成题数</div>
-              <div id="stat-completed" class="stat-value">0</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">风险标记数</div>
-              <div id="stat-risk" class="stat-value">0</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">支持轮次数</div>
-              <div id="stat-positive" class="stat-value">0</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">当前模式</div>
-              <div id="stat-mode" class="stat-value" style="font-size:18px;">手动</div>
-            </div>
+        <article class="card">
+          <div class="small-label">当前状态</div>
+          <div class="status-grid">
+            <div class="status-row"><span>Session</span><strong id="session-id">初始化中</strong></div>
+            <div class="status-row"><span>电影</span><strong id="movie-progress">0/0</strong></div>
+            <div class="status-row"><span>朗读</span><strong id="reading-progress">0/0</strong></div>
+            <div class="status-row"><span>问答</span><strong id="qa-progress">0/0</strong></div>
+            <div class="status-row"><span>当前阶段</span><strong id="stage-status">准备中</strong></div>
           </div>
-
-          <div class="progress-wrap">
-            <div class="progress-header">
-              <span id="progress-text">第 0 / 14 题</span>
-              <span id="progress-percent">0%</span>
-            </div>
-            <div class="progress-bar">
-              <div id="progress-fill" class="progress-fill"></div>
-            </div>
-          </div>
-
-          <div class="question-box">
-            <div id="question-index" class="question-index">加载中</div>
-            <p id="question-text" class="question-text">正在加载问题...</p>
-          </div>
-
-          <textarea id="answer-input" placeholder="请输入受试者回答，或者使用自动演示模式。"></textarea>
-
-          <div class="actions">
-            <button id="submit-btn" class="primary" type="button">提交并分析</button>
-            <button id="clear-btn" class="ghost" type="button">清空输入</button>
-          </div>
-          <div class="actions secondary-row">
-            <button id="demo-btn" class="accent" type="button">自动演示 14 题</button>
-            <button id="reset-btn" class="ghost" type="button">重置本轮访谈</button>
-          </div>
-
-          <div class="hint">手动模式下使用当前输入作答；自动演示模式会使用预置的 14 条样例回答依次提交。按 <code>Ctrl/Cmd + Enter</code> 可以提交当前回答。</div>
-        </div>
-      </div>
-
-      <div class="stack">
-        <div class="card panel">
-          <h2>分析时间线</h2>
-          <div id="feed" class="feed">
-            <div class="result-card">
-              <div class="result-label">已就绪</div>
-              <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的分类总结。</div>
-            </div>
-          </div>
-        </div>
-      </div>
+          <div id="status-note" class="note-box">初始化完成后，页面会自动展示欢迎提示、阶段提示、倒计时以及正式内容。</div>
+        </article>
+      </aside>
     </section>
   </main>
 
   <script>
-    const DEMO_ANSWERS = [
-      "今天整体还行，上午上课有点累，下午跟朋友聊了会儿天，心情稍微放松一些。",
-      "我家乡在杭州，小时候一直在那边生活，后来才出来上学。",
-      "我很喜欢家乡的西湖和龙井茶，吃的方面会想念片儿川和小笼包。",
-      "和家里人总体还可以，但我有时候不太愿意主动表达。和同学相处还行，不过压力大的时候会想自己待着。",
-      "我偏内向一点，熟悉以后会好很多，但在陌生人面前通常比较安静。",
-      "最近两周心情不算稳定，有几天会比较低落，也有几天只是觉得累和空。",
-      "对现在的学习兴趣比以前低一些，很多任务还是会做，但主动投入感没有那么强。",
-      "有时候会责备自己，觉得事情没做好会影响别人，尤其项目进度慢的时候会想是不是自己拖累了团队。",
-      "前段时间压力大的时候会觉得脑子转得慢，说话和做事都慢半拍，别人问我问题时反应也会迟一些。",
-      "我会经常紧张，尤其担心任务做不好或者别人评价我，有时候晚上也会反复想这些事。",
-      "偶尔也会有一两天精力特别旺盛，想做很多事情，睡得少一点也不觉得累。",
-      "有过连续几天比较烦躁的时候，容易因为小事顶嘴，语气会比较冲，但没有到动手的程度。",
-      "有时我一紧张或者兴奋就会说得特别快，自己停不下来，别人会提醒我慢一点。",
-      "偶尔会觉得脑子特别活跃，想法很多，感觉思路一下子全打开了，但持续时间通常不长。"
-    ];
+    const WELCOME_SECONDS = 2;
+    const MOVIE_INTRO_SECONDS = 2;
+    const TRANSITION_SECONDS = 10;
 
-    const statusDot = document.getElementById("status-dot");
-    const statusText = document.getElementById("status-text");
-    const progressText = document.getElementById("progress-text");
-    const progressPercent = document.getElementById("progress-percent");
-    const progressFill = document.getElementById("progress-fill");
-    const questionIndexNode = document.getElementById("question-index");
-    const questionTextNode = document.getElementById("question-text");
-    const answerInput = document.getElementById("answer-input");
-    const submitBtn = document.getElementById("submit-btn");
-    const clearBtn = document.getElementById("clear-btn");
-    const demoBtn = document.getElementById("demo-btn");
-    const resetBtn = document.getElementById("reset-btn");
-    const feed = document.getElementById("feed");
-    const questionListNode = document.getElementById("question-list");
-    const reviewPanel = document.getElementById("review-panel");
-    const statCompleted = document.getElementById("stat-completed");
-    const statRisk = document.getElementById("stat-risk");
-    const statPositive = document.getElementById("stat-positive");
-    const statMode = document.getElementById("stat-mode");
+    const phaseBadge = document.getElementById('phase-badge');
+    const contentTitle = document.getElementById('content-title');
+    const contentSubtitle = document.getElementById('content-subtitle');
+    const contentBody = document.getElementById('content-body');
+    const primaryBtn = document.getElementById('primary-btn');
+    const cameraPreview = document.getElementById('camera-preview');
+    const recordingDot = document.getElementById('recording-dot');
+    const recordingText = document.getElementById('recording-text');
+    const cameraRetryBtn = document.getElementById('camera-retry-btn');
+    const sessionIdNode = document.getElementById('session-id');
+    const movieProgressNode = document.getElementById('movie-progress');
+    const readingProgressNode = document.getElementById('reading-progress');
+    const qaProgressNode = document.getElementById('qa-progress');
+    const stageStatusNode = document.getElementById('stage-status');
+    const statusNoteNode = document.getElementById('status-note');
 
-    let questions = [];
-    let currentIndex = 0;
-    let responses = [];
-    let turnResults = [];
-    let inspectedIndex = null;
-    let busy = false;
-    let autoDemoRunning = false;
+    let sessionId = null;
+    let sessionState = null;
+    let assetManifest = { movie: [], reading: [], qa_questions: [] };
+    let mediaStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let currentSegment = null;
+    let flowStarted = false;
 
     function escapeHtml(text) {
-      return String(text)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
+      return String(text ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
     }
 
-    function setStatus(ok, text) {
-      statusText.textContent = text;
-      statusDot.classList.toggle("live", ok);
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    function zhDuration(value) {
-      return {
-        none: "无",
-        less_than_2_weeks: "少于2周",
-        "2_to_4_weeks": "2到4周",
-        "1_to_3_months": "1到3个月",
-        more_than_3_months: "3个月以上",
-        unclear: "不明确"
-      }[value] || value;
+    function pad2(value) {
+      return String(value).padStart(2, '0');
     }
 
-    function zhFrequency(value) {
-      return {
-        none: "无",
-        rare: "很少",
-        sometimes: "有时",
-        often: "经常",
-        almost_every_day: "几乎每天",
-        unclear: "不明确"
-      }[value] || value;
+    function setPanel({ phase, title, subtitle, bodyHtml = '' }) {
+      phaseBadge.textContent = phase;
+      contentTitle.textContent = title;
+      contentSubtitle.textContent = subtitle;
+      contentBody.innerHTML = bodyHtml;
+      stageStatusNode.textContent = phase;
     }
 
-    function zhSeverity(value) {
-      return {
-        none: "无",
-        mild: "轻度",
-        moderate: "中度",
-        severe: "重度"
-      }[value] || value;
+    function setStatusNote(text) {
+      statusNoteNode.textContent = text;
     }
 
-    function zhPolarity(value) {
-      return {
-        support: "支持症状存在",
-        deny: "否定症状存在",
-        uncertain: "信息不足"
-      }[value] || value;
+    function clearPrimaryAction() {
+      primaryBtn.classList.add('hidden');
+      primaryBtn.disabled = false;
+      primaryBtn.textContent = '';
+      primaryBtn.onclick = null;
     }
 
-    function zhOverallRisk(value) {
-      return {
-        low: "低风险",
-        medium: "中风险",
-        high: "高风险"
-      }[value] || value;
+    function setPrimaryAction(label, handler) {
+      primaryBtn.classList.remove('hidden');
+      primaryBtn.textContent = label;
+      primaryBtn.disabled = false;
+      primaryBtn.onclick = async () => {
+        primaryBtn.disabled = true;
+        try {
+          await handler();
+        } finally {
+          primaryBtn.disabled = false;
+        }
+      };
     }
 
-    function zhClassification(value) {
-      return {
-        depression: "抑郁",
-        bipolar: "双相",
-        anxiety: "焦虑",
-        healthy: "健康"
-      }[value] || value;
+    function setRecordingState(text, active = false) {
+      recordingText.textContent = text;
+      recordingDot.classList.toggle('live', active);
     }
 
-    function formatClassification(values) {
-      return (values || []).map(zhClassification).join(" + ");
+    function countStageRecords(stage) {
+      return Object.keys(sessionState?.stages?.[stage] || {}).length;
     }
 
-    function updateStats() {
-      statCompleted.textContent = String(responses.length);
-      statRisk.textContent = String(turnResults.filter(item => item.risk_flag).length);
-      statPositive.textContent = String(turnResults.filter(item => item.polarity === "support").length);
-      statMode.textContent = autoDemoRunning ? "自动演示" : "手动";
+    function renderSidebar() {
+      sessionIdNode.textContent = sessionId || '尚未创建';
+      movieProgressNode.textContent = `${countStageRecords('movie')}/${assetManifest.movie.length || 0}`;
+      readingProgressNode.textContent = `${countStageRecords('reading')}/${assetManifest.reading.length || 0}`;
+      qaProgressNode.textContent = `${countStageRecords('qa')}/${assetManifest.qa_questions.length || 0}`;
     }
 
-    function updateProgress() {
-      const total = questions.length || 14;
-      const completed = responses.length;
-      const percent = Math.round((completed / total) * 100);
-      progressText.textContent = `第 ${Math.min(currentIndex + 1, total)} / ${total} 题`;
-      progressPercent.textContent = `${percent}%`;
-      progressFill.style.width = `${percent}%`;
-      updateStats();
-      renderQuestionList();
-    }
-
-    function isNearBottom(node) {
-      return node.scrollHeight - node.scrollTop - node.clientHeight < 24;
-    }
-
-    function renderQuestionList() {
-      const stickToBottom = isNearBottom(questionListNode);
-      const visibleQuestions = questions.slice(0, Math.min(currentIndex + 1, questions.length));
-      questionListNode.innerHTML = visibleQuestions.map((question, index) => {
-        const states = ["question-item"];
-        if (index < responses.length) states.push("done");
-        if (index === currentIndex) states.push("current");
-        if (index === inspectedIndex) states.push("inspected");
-        return `
-          <button class="${states.join(" ")}" type="button" data-index="${index}">
-            <div class="question-item-index">第 ${question.question_id} 题</div>
-            <div class="question-item-text">${escapeHtml(question.question_text)}</div>
-          </button>
-        `;
-      }).join("");
-      if (stickToBottom) {
-        questionListNode.scrollTop = questionListNode.scrollHeight;
+    async function ensureCamera() {
+      if (mediaStream) return mediaStream;
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('当前浏览器不支持 navigator.mediaDevices.getUserMedia');
       }
+      mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      cameraPreview.srcObject = mediaStream;
+      setRecordingState('摄像头和麦克风已连接，等待展示正式内容。');
+      return mediaStream;
     }
 
-    function renderReviewPanel() {
-      if (inspectedIndex == null || inspectedIndex >= responses.length) {
-        reviewPanel.innerHTML = `
-          <h3>当前还没有可回看的回答</h3>
-          <div class="review-block">完成题目后，点击左侧目录中的已完成问题，可以查看当时的回答和分析结果。</div>
-        `;
-        return;
+    function chooseMimeType() {
+      const preferred = [
+        'video/webm;codecs=vp8,opus',
+        'video/webm;codecs=vp9,opus',
+        'video/webm'
+      ];
+      return preferred.find((type) => window.MediaRecorder && MediaRecorder.isTypeSupported(type)) || '';
+    }
+
+    async function startRecordingSegment(segment) {
+      await ensureCamera();
+      if (!window.MediaRecorder) {
+        throw new Error('当前浏览器不支持 MediaRecorder');
       }
-
-      const question = questions[inspectedIndex];
-      const response = responses[inspectedIndex];
-      const result = turnResults[inspectedIndex];
-      reviewPanel.innerHTML = `
-        <h3>第 ${question.question_id} 题</h3>
-        <div class="review-block"><strong>题目：</strong>${escapeHtml(question.question_text)}</div>
-        <div class="review-block"><strong>回答：</strong>${escapeHtml(response.answer)}</div>
-        <div class="review-block"><strong>症状线索：</strong>${escapeHtml(result?.symptom || "暂无")}</div>
-        <div class="review-block"><strong>结果概览：</strong>${escapeHtml(result ? `${zhPolarity(result.polarity)} / ${zhSeverity(result.severity)}` : "暂无")}</div>
-        <div class="review-block"><strong>解释：</strong>${escapeHtml(result?.explanation || "暂无")}</div>
-      `;
+      recordedChunks = [];
+      currentSegment = segment;
+      const mimeType = chooseMimeType();
+      mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+      mediaRecorder.start();
+      setRecordingState(`正在录制：${segment.stage} / ${segment.key}`, true);
     }
 
-    function renderQuestion() {
-      const question = questions[currentIndex];
-      if (!question) {
-        questionIndexNode.textContent = "已完成";
-        questionTextNode.textContent = "本轮访谈已完成，等待查看最终汇总结果。";
-        answerInput.disabled = true;
-        submitBtn.disabled = true;
-        return;
+    async function stopRecordingSegment() {
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        return null;
       }
-      questionIndexNode.textContent = `第 ${question.question_id} 题`;
-      questionTextNode.textContent = question.question_text;
-      updateProgress();
-      if (!autoDemoRunning) {
-        answerInput.focus();
+      const recorder = mediaRecorder;
+      const mimeType = recorder.mimeType || 'video/webm';
+      const blob = await new Promise((resolve, reject) => {
+        recorder.onerror = () => reject(new Error('录制失败'));
+        recorder.onstop = () => resolve(new Blob(recordedChunks, { type: mimeType }));
+        recorder.stop();
+      });
+      mediaRecorder = null;
+      setRecordingState('录制已停止，正在整理并上传当前片段。');
+      return blob;
+    }
+
+    async function uploadCurrentSegment(blob) {
+      if (!blob || !currentSegment || !sessionId) return;
+      const formData = new FormData();
+      formData.append('capture', blob, `${currentSegment.key}.webm`);
+      let url = '';
+      if (currentSegment.stage === 'movie') {
+        url = `/api/v1/interviews/${sessionId}/movie/${currentSegment.key}`;
+      } else if (currentSegment.stage === 'reading') {
+        url = `/api/v1/interviews/${sessionId}/reading/${currentSegment.key}`;
+      } else {
+        url = `/api/v1/interviews/${sessionId}/qa/${currentSegment.questionId}`;
       }
+      const response = await fetch(url, { method: 'POST', body: formData });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.detail || '上传录制内容失败');
+      }
+      sessionState = payload.session;
+      renderSidebar();
+      setStatusNote(`${currentSegment.title} 已归档，diagnosis status=${payload.record?.diagnosis?.status || 'unknown'}。`);
+      currentSegment = null;
     }
 
-    function appendTurnResult(result) {
-      turnResults.push(result);
-      const node = document.createElement("article");
-      node.className = "result-card";
-      node.innerHTML = `
-        <div class="result-top">
-          <div>
-            <div class="result-label">Turn ${result.question_id}</div>
-            <h3>${escapeHtml(result.question_text)}</h3>
-          </div>
-          <div class="pill ${result.risk_flag ? "risk" : result.polarity === "deny" ? "safe" : "warn"}">
-            ${result.risk_flag ? "risk_flag=true" : "risk_flag=false"}
-          </div>
-        </div>
-        <div class="result-block"><div class="result-label">受试者回答</div><div>${escapeHtml(result.answer)}</div></div>
-        <div class="pill-row">
-          <span class="pill">${escapeHtml(result.symptom)}</span>
-          <span class="pill">${escapeHtml(zhDuration(result.duration))}</span>
-          <span class="pill">${escapeHtml(zhFrequency(result.frequency))}</span>
-          <span class="pill">${escapeHtml(zhSeverity(result.severity))}</span>
-          <span class="pill ${result.polarity === "support" ? "risk" : result.polarity === "deny" ? "safe" : "warn"}">${escapeHtml(zhPolarity(result.polarity))}</span>
-          <span class="pill">置信度=${Number(result.confidence).toFixed(2)}</span>
-          <span class="pill ${result.review_passed ? "safe" : "warn"}">${result.review_passed ? "复核通过" : "复核未完全通过"}</span>
-          <span class="pill">重试次数=${Number(result.retry_count)}</span>
-        </div>
-        <div class="result-block"><div class="result-label">持续时间 / 频率说明</div><div>${escapeHtml(result.duration_text)} / ${escapeHtml(result.frequency_text)}</div></div>
-        <div class="result-block"><div class="result-label">解释说明</div><div>${escapeHtml(result.explanation)}</div></div>
-        <div class="result-block"><div class="result-label">复核说明</div><div>${escapeHtml(result.review_notes)}</div></div>
-        <div class="result-block">
-          <div class="result-label">复核发现的问题</div>
-          <ul class="evidence-list">${(result.review_issues || []).length ? result.review_issues.map(item => `<li>${escapeHtml(item)}</li>`).join("") : "<li>无</li>"}</ul>
-        </div>
-        <div class="result-block">
-          <div class="result-label">依据证据</div>
-          <ul class="evidence-list">${result.evidence.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-        </div>
-      `;
-      feed.appendChild(node);
-      feed.scrollTop = feed.scrollHeight;
-      updateStats();
+    async function stopAndUploadCurrentSegment() {
+      const blob = await stopRecordingSegment();
+      await uploadCurrentSegment(blob);
+      setRecordingState('等待展示下一段正式内容。');
     }
 
-    function appendSummary(result) {
-      const node = document.createElement("article");
-      node.className = "result-card summary-card";
-      node.innerHTML = `
-        <div class="summary-hero">
-          <div>
-            <div class="result-label">最终整场总结</div>
-            <h3 style="margin:0 0 10px;">${escapeHtml(formatClassification(result.session_classification))}</h3>
-            <div>${escapeHtml(result.summary)}</div>
-          </div>
-          <div class="summary-score">
-            <div class="result-label">总体置信度</div>
-            <strong>${Number(result.overall_confidence).toFixed(2)}</strong>
-            <div class="pill ${result.overall_risk === "high" ? "risk" : result.overall_risk === "low" ? "safe" : "warn"}" style="margin-top:10px;">
-              ${escapeHtml(zhOverallRisk(result.overall_risk))}
+    async function createSession() {
+      const response = await fetch('/api/v1/interviews', { method: 'POST' });
+      if (!response.ok) {
+        throw new Error('创建访谈 session 失败');
+      }
+      const payload = await response.json();
+      sessionState = payload.session;
+      sessionId = payload.session.session_id;
+      assetManifest = payload.assets || { movie: [], reading: [], qa_questions: payload.session.questions || [] };
+      renderSidebar();
+      setStatusNote(`session 已创建：${sessionId}。问题数量=${payload.session.question_count || assetManifest.qa_questions.length}。`);
+    }
+
+    async function runCountdownScreen(phase, title, subtitle, seconds) {
+      clearPrimaryAction();
+      for (let remaining = seconds; remaining > 0; remaining -= 1) {
+        setPanel({
+          phase,
+          title,
+          subtitle,
+          bodyHtml: `
+            <div class="countdown-wrap">
+              <div class="countdown-number">${remaining}</div>
+              <div class="muted">倒计时结束后自动继续</div>
             </div>
+          `,
+        });
+        await sleep(1000);
+      }
+    }
+
+    async function runWelcomeAndMovieIntro() {
+      await runCountdownScreen(
+        '欢迎',
+        '抑郁在线识别',
+        '这是一个自助抑郁检测平台，请保持环境安静并正视摄像头。',
+        WELCOME_SECONDS,
+      );
+      await runCountdownScreen(
+        '看电影阶段',
+        '接下来你将看到三段电影片段',
+        `请耐心观看。每一个电影结束后休息 ${TRANSITION_SECONDS} 秒钟，倒计时结束后自动播放下一段电影。`,
+        MOVIE_INTRO_SECONDS,
+      );
+    }
+
+    async function attemptVideoPlay(videoEl, title) {
+      try {
+        await videoEl.play();
+      } catch (error) {
+        setStatusNote(`浏览器阻止了自动播放：${title}。请点击按钮手动开始当前电影。`);
+        await new Promise((resolve) => {
+          setPrimaryAction('开始播放当前电影', async () => {
+            clearPrimaryAction();
+            await videoEl.play();
+            resolve();
+          });
+        });
+      }
+    }
+
+    async function runMovieSegment(item, index, total) {
+      const subtitle = `${item.description || ''}
+
+影片结束后会自动停止录制并进入休息倒计时。`;
+      setPanel({
+        phase: `看电影 ${index}/${total}`,
+        title: item.title,
+        subtitle,
+        bodyHtml: item.url
+          ? `<video id="stage-video" class="stage-video" playsinline preload="auto" src="${escapeHtml(item.url)}"></video>`
+          : '<div class="completion-card"><div class="small-label">缺少素材</div><p>当前标签下未发现电影资源，请检查 <code>app/static/interview-assets/movie/</code> 目录。</p></div>',
+      });
+      clearPrimaryAction();
+      if (!item.url) {
+        await sleep(1500);
+        return;
+      }
+      await startRecordingSegment({ stage: 'movie', key: item.key, title: item.title });
+      const player = document.getElementById('stage-video');
+      const ended = new Promise((resolve, reject) => {
+        player.addEventListener('ended', () => resolve(), { once: true });
+        player.addEventListener('error', () => reject(new Error('电影播放失败')), { once: true });
+      });
+      await attemptVideoPlay(player, item.title);
+      await ended;
+      await stopAndUploadCurrentSegment();
+    }
+
+    async function runReadingSegment(item, index, total) {
+      setPanel({
+        phase: `朗读 ${index}/${total}`,
+        title: item.title,
+        subtitle: '请对着摄像头自然朗读屏幕中的文字。朗读完成后点击“朗读结束”。',
+        bodyHtml: `
+          <div class="text-card">
+            <div class="small-label">朗读文本</div>
+            <pre>${escapeHtml(item.text || '当前标签下未发现朗读文本文件。')}</pre>
           </div>
-        </div>
-        <div class="result-block"><div class="result-label">解释说明</div><div>${escapeHtml(result.explanation)}</div></div>
-        <div class="result-block">
-          <div class="result-label">症状总结</div>
-          <ul class="summary-list">${result.symptom_summary.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-        </div>
-        <div class="result-block">
-          <div class="result-label">关键发现</div>
-          <ul class="summary-list">${result.key_findings.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-        </div>
-        <div class="result-block">
-          <div class="result-label">缺失信息</div>
-          <ul class="summary-list">${result.missing_information.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-        </div>
-      `;
-      feed.appendChild(node);
-      feed.scrollTop = feed.scrollHeight;
-    }
-
-    function appendSystemCard(title, message) {
-      const node = document.createElement("article");
-      node.className = "result-card";
-      node.innerHTML = `<div class="result-label">${escapeHtml(title)}</div><div>${escapeHtml(message)}</div>`;
-      feed.appendChild(node);
-      feed.scrollTop = feed.scrollHeight;
-    }
-
-    function resetInterviewState() {
-      currentIndex = 0;
-      responses = [];
-      turnResults = [];
-      inspectedIndex = null;
-      busy = false;
-      autoDemoRunning = false;
-      answerInput.disabled = false;
-      answerInput.value = "";
-      feed.innerHTML = `
-        <div class="result-card">
-          <div class="result-label">已就绪</div>
-          <div>右侧会按顺序展示每一道题的结构化结果，最后追加整场访谈的分类总结。</div>
-        </div>
-      `;
-      submitBtn.disabled = false;
-      clearBtn.disabled = false;
-      demoBtn.disabled = false;
-      resetBtn.disabled = false;
-      renderQuestion();
-      updateStats();
-      renderReviewPanel();
-    }
-
-    async function analyzeSingleAnswer(answer) {
-      const question = questions[currentIndex];
-      const response = await fetch("/api/analyze-turn", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question_id: question.question_id,
-          answer
-        })
+        `,
       });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(payload.detail || "单题分析失败");
-      }
-      responses.push({ question_id: question.question_id, answer });
-      appendTurnResult(payload);
-      inspectedIndex = currentIndex;
-      currentIndex += 1;
-      answerInput.value = "";
-      updateProgress();
-      renderReviewPanel();
-    }
-
-    async function analyzeCurrentTurn() {
-      if (busy) return;
-      const answer = answerInput.value.trim();
-      if (!answer || !questions[currentIndex]) return;
-
-      busy = true;
-      submitBtn.disabled = true;
-      clearBtn.disabled = true;
-      demoBtn.disabled = true;
-
-      try {
-        await analyzeSingleAnswer(answer);
-
-        if (responses.length >= questions.length) {
-          appendSystemCard("整场总结", "全部问题已完成，正在调用整场汇总分析。");
-          await analyzeSession();
-          renderQuestion();
-          return;
-        }
-
-        renderQuestion();
-      } catch (error) {
-        appendSystemCard("错误", error.message || "请求失败");
-      } finally {
-        busy = false;
-        submitBtn.disabled = false;
-        clearBtn.disabled = false;
-        demoBtn.disabled = false;
-      }
-    }
-
-    async function analyzeSession() {
-      const response = await fetch("/api/analyze-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: `session-${Date.now()}`,
-          responses,
-          turns: turnResults
-        })
+      await startRecordingSegment({ stage: 'reading', key: item.key, title: item.title });
+      await new Promise((resolve) => {
+        setPrimaryAction('朗读结束', async () => {
+          clearPrimaryAction();
+          await stopAndUploadCurrentSegment();
+          resolve();
+        });
       });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(payload.detail || "整场汇总分析失败");
-      }
-      progressText.textContent = `第 ${questions.length} / ${questions.length} 题`;
-      progressPercent.textContent = "100%";
-      progressFill.style.width = "100%";
-      appendSummary(payload);
     }
 
-    async function runAutoDemo() {
-      if (busy || autoDemoRunning || !questions.length) return;
-      resetInterviewState();
-      autoDemoRunning = true;
-      updateStats();
-      appendSystemCard("自动演示", "正在使用预置回答自动跑完整个 14 轮流程。");
-      submitBtn.disabled = true;
-      clearBtn.disabled = true;
-      demoBtn.disabled = true;
-      answerInput.disabled = true;
+    async function runQuestionSegment(question, index, total) {
+      const isLast = index === total;
+      setPanel({
+        phase: `访谈 ${index}/${total}`,
+        title: `问题 ${question.question_id}`,
+        subtitle: '请自然作答。点击按钮后会停止当前题的录制并进入下一题。',
+        bodyHtml: `
+          <div class="question-card">
+            <div class="small-label">题目（来自 /static/interview-assets/interview/）</div>
+            <pre>${escapeHtml(question.question_text)}</pre>
+          </div>
+        `,
+      });
+      await startRecordingSegment({
+        stage: 'qa',
+        key: `q${pad2(question.question_id)}`,
+        questionId: question.question_id,
+        title: `问题 ${question.question_id}`,
+      });
+      await new Promise((resolve) => {
+        setPrimaryAction(isLast ? '结束访谈' : '下一个问题', async () => {
+          clearPrimaryAction();
+          await stopAndUploadCurrentSegment();
+          resolve();
+        });
+      });
+    }
 
-      try {
-        for (let i = 0; i < questions.length; i += 1) {
-          const answer = DEMO_ANSWERS[i] || "暂时没有额外回答。";
-          answerInput.value = answer;
-          await analyzeSingleAnswer(answer);
+    async function runFlow() {
+      if (flowStarted) return;
+      flowStarted = true;
+      await runWelcomeAndMovieIntro();
 
-          renderQuestion();
+      for (let index = 0; index < assetManifest.movie.length; index += 1) {
+        await runMovieSegment(assetManifest.movie[index], index + 1, assetManifest.movie.length);
+        if (index < assetManifest.movie.length - 1) {
+          await runCountdownScreen('休息中', '请休息 10 秒', '倒计时结束后将自动播放下一段电影。', TRANSITION_SECONDS);
         }
-
-        appendSystemCard("整场总结", "全部问题已完成，正在调用整场汇总分析。");
-        await analyzeSession();
-        renderQuestion();
-        appendSystemCard("自动演示", "自动演示已完成。你可以点击“重置本轮访谈”重新开始。");
-      } catch (error) {
-        appendSystemCard("错误", error.message || "自动演示失败");
-      } finally {
-        autoDemoRunning = false;
-        busy = false;
-        answerInput.disabled = true;
-        submitBtn.disabled = true;
-        clearBtn.disabled = false;
-        demoBtn.disabled = false;
-        updateStats();
       }
+
+      await runCountdownScreen('阶段切换', '看电影阶段结束', '接下来你需要朗读三段文字。', TRANSITION_SECONDS);
+
+      for (let index = 0; index < assetManifest.reading.length; index += 1) {
+        await runReadingSegment(assetManifest.reading[index], index + 1, assetManifest.reading.length);
+        if (index < assetManifest.reading.length - 1) {
+          await runCountdownScreen('休息中', '请休息 10 秒', '倒计时结束后将自动展示下一段朗读文字。', TRANSITION_SECONDS);
+        }
+      }
+
+      await runCountdownScreen('阶段切换', '朗读阶段结束', '接下来进入访谈环节。', TRANSITION_SECONDS);
+
+      const questions = assetManifest.qa_questions || [];
+      for (let index = 0; index < questions.length; index += 1) {
+        await runQuestionSegment(questions[index], index + 1, questions.length);
+      }
+
+      clearPrimaryAction();
+      setPanel({
+        phase: '完成',
+        title: '本次访谈流程已完成',
+        subtitle: '三阶段内容已经完成采集与归档。后端可基于 session 继续进行诊断与汇总。',
+        bodyHtml: `
+          <div class="completion-card">
+            <div class="small-label">完成提示</div>
+            <p>session_id: ${escapeHtml(sessionId)}</p>
+            <p class="muted">电影、朗读、访谈问答的录制内容已经按阶段上传到后端归档目录。</p>
+          </div>
+        `,
+      });
+      setRecordingState('访谈完成，录制已结束。');
+      setStatusNote('整场流程已结束。你可以关闭页面，或刷新重新开始新的 session。');
     }
 
     async function bootstrap() {
       try {
-        const [healthResponse, questionsResponse] = await Promise.all([
-          fetch("/health"),
-          fetch("/api/questions")
-        ]);
-        if (!healthResponse.ok || !questionsResponse.ok) {
-          throw new Error("后端不可用");
-        }
-        questions = await questionsResponse.json();
-        setStatus(true, "后端已就绪");
-        renderQuestionList();
-        resetInterviewState();
+        setPanel({
+          phase: '准备中',
+          title: '正在初始化流程',
+          subtitle: '正在创建 session，并尝试连接摄像头、麦克风与静态资源清单。',
+          bodyHtml: `
+            <div class="countdown-wrap">
+              <div class="countdown-number">…</div>
+              <div class="muted">请稍候</div>
+            </div>
+          `,
+        });
+        await createSession();
+        await ensureCamera();
+        cameraRetryBtn.classList.add('hidden');
+        await runFlow();
       } catch (error) {
-        setStatus(false, "后端不可用");
-        appendSystemCard("错误", "无法加载后端服务或问题列表。");
-        questionIndexNode.textContent = "不可用";
-        questionTextNode.textContent = "后端不可用，请先启动服务。";
-        answerInput.disabled = true;
-        submitBtn.disabled = true;
-        demoBtn.disabled = true;
+        setPanel({
+          phase: '初始化失败',
+          title: '无法自动开始流程',
+          subtitle: error.message || '请确认浏览器允许访问摄像头和麦克风，并检查静态资源是否已准备好。',
+          bodyHtml: `
+            <div class="completion-card">
+              <div class="small-label">错误信息</div>
+              <p>${escapeHtml(error.message || '初始化失败')}</p>
+            </div>
+          `,
+        });
+        setStatusNote(error.message || '初始化失败');
+        setRecordingState('尚未连接摄像头。');
+        cameraRetryBtn.classList.remove('hidden');
       }
     }
 
-    submitBtn.addEventListener("click", analyzeCurrentTurn);
-    clearBtn.addEventListener("click", () => {
-      answerInput.value = "";
-      answerInput.focus();
-    });
-    demoBtn.addEventListener("click", runAutoDemo);
-    resetBtn.addEventListener("click", resetInterviewState);
-    questionListNode.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-index]");
-      if (!button) return;
-      inspectedIndex = Number(button.dataset.index);
-      renderQuestionList();
-      renderReviewPanel();
-    });
-    answerInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        analyzeCurrentTurn();
+    cameraRetryBtn.addEventListener('click', async () => {
+      try {
+        await ensureCamera();
+        cameraRetryBtn.classList.add('hidden');
+        if (!flowStarted) {
+          await runFlow();
+        }
+      } catch (error) {
+        setStatusNote(error.message || '摄像头重连失败');
       }
     });
 

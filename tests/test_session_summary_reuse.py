@@ -4,9 +4,19 @@ from unittest.mock import patch
 
 from fastapi import HTTPException
 
-from app import pipeline
 from app.main import analyze_session_api
-from app.schemas import SessionInput, SessionSummary, TurnAnalysis
+from app.schemas import SessionAnalysis, SessionInput, TurnAnalysis
+from depression_detection.tasks.qa.service import QAAnalysisService
+
+
+class _DummyTextRuntime:
+    def invoke(self, prompt: str):
+        raise AssertionError(f"unexpected model call: {prompt}")
+
+
+class _DummyTranscriptionService:
+    def transcribe_audio(self, audio_path: str):
+        raise AssertionError(f"unexpected transcription call: {audio_path}")
 
 
 class SessionSummaryReuseTests(unittest.TestCase):
@@ -32,8 +42,10 @@ class SessionSummaryReuseTests(unittest.TestCase):
             review_issues=[],
         )
 
-    def make_summary(self) -> SessionSummary:
-        return SessionSummary(
+    def make_summary(self, session_id: str, turns: list[TurnAnalysis]) -> SessionAnalysis:
+        return SessionAnalysis(
+            session_id=session_id,
+            turns=turns,
             overall_risk="medium",
             session_classification=["depression", "anxiety"],
             overall_confidence=0.76,
@@ -45,12 +57,15 @@ class SessionSummaryReuseTests(unittest.TestCase):
         )
 
     def test_analyze_session_prefers_provided_turns(self):
+        service = QAAnalysisService(text_runtime=_DummyTextRuntime(), transcription_service=_DummyTranscriptionService())
         provided_turn = self.make_turn()
 
-        with patch("app.pipeline.analyze_turn", side_effect=AssertionError("should not reanalyze turns")), patch(
-            "app.pipeline._invoke_structured", return_value=self.make_summary()
-        ) as invoke_mock:
-            result = pipeline.analyze_session(
+        with patch.object(service, "_build_turns_from_responses", side_effect=AssertionError("should not reanalyze turns")), patch.object(
+            service,
+            "summarize_session_from_turns",
+            return_value=self.make_summary("session-turns", [provided_turn]),
+        ) as summarize_mock:
+            result = service.analyze_session(
                 session_id="session-turns",
                 responses=[{"question_id": 6, "answer": "这条原始回答不应被再次使用"}],
                 turns=[provided_turn.model_dump(mode="json")],
@@ -58,23 +73,26 @@ class SessionSummaryReuseTests(unittest.TestCase):
 
         self.assertEqual(result.turns[0].question_id, provided_turn.question_id)
         self.assertEqual(result.turns[0].answer, provided_turn.answer)
-        self.assertEqual(invoke_mock.call_count, 1)
-        summarizer_prompt = invoke_mock.call_args[0][0]
-        self.assertIn(provided_turn.answer, summarizer_prompt)
-        self.assertNotIn("这条原始回答不应被再次使用", summarizer_prompt)
+        summarize_mock.assert_called_once()
+        called_turns = summarize_mock.call_args.kwargs.get("turns") or summarize_mock.call_args.args[1]
+        self.assertEqual(called_turns[0]["answer"], provided_turn.answer)
 
     def test_analyze_session_falls_back_to_responses(self):
+        service = QAAnalysisService(text_runtime=_DummyTextRuntime(), transcription_service=_DummyTranscriptionService())
         generated_turn = self.make_turn(answer="只有 responses 时需要补跑单题分析")
 
-        with patch("app.pipeline.analyze_turn", return_value=generated_turn) as analyze_turn_mock, patch(
-            "app.pipeline._invoke_structured", return_value=self.make_summary()
-        ):
-            result = pipeline.analyze_session(
-                session_id="session-responses",
-                responses=[{"question_id": generated_turn.question_id, "answer": generated_turn.answer}],
-            )
+        with patch.object(service, "analyze_turn", return_value=generated_turn) as analyze_turn_mock, patch.object(
+            service,
+            "summarize_session_from_turns",
+            return_value=self.make_summary("session-responses", [generated_turn]),
+        ) as summarize_mock:
+            result = service.analyze_session(
+                    session_id="session-responses",
+                    responses=[{"question_id": generated_turn.question_id, "answer": generated_turn.answer}],
+                )
 
-        analyze_turn_mock.assert_called_once_with(generated_turn.question_id, generated_turn.answer)
+        analyze_turn_mock.assert_called_once_with(generated_turn.question_id, generated_turn.answer, None, None, None, None, None)
+        summarize_mock.assert_called_once()
         self.assertEqual(result.turns[0].answer, generated_turn.answer)
 
     def test_api_rejects_empty_turns_and_responses(self):
@@ -84,9 +102,23 @@ class SessionSummaryReuseTests(unittest.TestCase):
         self.assertEqual(ctx.exception.status_code, 400)
         self.assertIn("cannot both be empty", str(ctx.exception.detail))
 
-    def test_frontend_submits_turn_results_for_session_summary(self):
+    def test_frontend_uses_interview_workflow_routes(self):
         html = Path("app/static/index.html").read_text(encoding="utf-8")
-        self.assertIn("turns: turnResults", html)
+        self.assertIn("/api/v1/interviews", html)
+        self.assertIn("看电影 → 朗读文字 → 访谈问答", html)
+        self.assertIn("/static/interview-assets/interview/", html)
+        self.assertIn("payload.assets", html)
+        self.assertIn("assetManifest.reading", html)
+        self.assertIn("接下来你将看到三段电影片段", html)
+        self.assertIn("请休息 10 秒", html)
+        self.assertIn("朗读结束", html)
+        self.assertIn("下一个问题", html)
+
+    def test_frontend_requests_camera_and_microphone_capture(self):
+        html = Path("app/static/index.html").read_text(encoding="utf-8")
+        self.assertIn("navigator.mediaDevices.getUserMedia", html)
+        self.assertIn("MediaRecorder", html)
+        self.assertIn("重新连接摄像头 / 麦克风", html)
 
 
 if __name__ == "__main__":
